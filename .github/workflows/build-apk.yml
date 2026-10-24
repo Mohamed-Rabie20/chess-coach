@@ -1,1 +1,76 @@
-
+name: Build APK
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Prepare web files
+        run: |
+          mkdir -p www/engine
+          cp index.html www/index.html
+          curl -fL -o www/stockfish.js https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js
+          ls -la www
+      - name: Fast engine (Stockfish WASM, optional)
+        continue-on-error: true
+        run: |
+          mkdir -p /tmp/sf && cd /tmp/sf
+          npm init -y >/dev/null 2>&1
+          npm install stockfish --no-audit --no-fund
+          PKG=/tmp/sf/node_modules/stockfish
+          echo "--- files in the package"
+          find $PKG -type f \( -name '*.js' -o -name '*.wasm' \) -printf '%s %P\n' | sort -k2
+          JS=""
+          for pat in '*lite*single*.js' '*single*.js'; do
+            for f in $(find $PKG -type f -name "$pat" | sort); do
+              w="${f%.js}.wasm"
+              if [ -f "$w" ] && [ "$(stat -c %s "$w")" -lt 40000000 ]; then JS="$f"; break 2; fi
+            done
+          done
+          if [ -n "$JS" ]; then
+            cp "$JS" "${JS%.js}.wasm" "$GITHUB_WORKSPACE/www/engine/"
+            B=$(basename "$JS")
+            printf 'window.SFNEW={file:"engine/%s",name:"Stockfish (WASM, NNUE)"};\n' "$B" > "$GITHUB_WORKSPACE/www/engine/config.js"
+            echo "USING ENGINE: $B"
+          else
+            echo "No suitable WASM engine found - the app will use the built-in Stockfish 10"
+          fi
+      - name: Create Android project
+        run: |
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap init "Chess Coach" com.chesscoach.standalone --web-dir www
+          npx cap add android
+          npx cap sync android
+      - name: App icon
+        run: |
+          sudo apt-get install -y imagemagick
+          IM=$(command -v magick || command -v convert)
+          RES=android/app/src/main/res
+          for d in mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432; do
+            IFS=: read n s f <<< "$d"
+            g=$((f*74/100))
+            $IM icon.png -resize ${s}x${s} $RES/mipmap-$n/ic_launcher.png
+            $IM icon.png -resize ${s}x${s} $RES/mipmap-$n/ic_launcher_round.png
+            $IM icon.png -resize ${g}x${g} -background none -gravity center -extent ${f}x${f} $RES/mipmap-$n/ic_launcher_foreground.png
+          done
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#0c1322</color>\n</resources>\n' > $RES/values/ic_launcher_background.xml
+          find $RES -name 'ic_launcher*' | sort
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Chess-Coach-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
