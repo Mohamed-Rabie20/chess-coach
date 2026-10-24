@@ -53,7 +53,7 @@ jobs:
           npx cap sync android
       - name: App icon
         run: |
-          sudo apt-get install -y imagemagick
+          command -v magick >/dev/null || command -v convert >/dev/null || { sudo apt-get update -y && sudo apt-get install -y imagemagick; }
           IM=$(command -v magick || command -v convert)
           RES=android/app/src/main/res
           # remove the fake checkerboard baked into the icon corners: crop 7% from every side
