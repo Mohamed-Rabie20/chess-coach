@@ -56,12 +56,14 @@ jobs:
           sudo apt-get install -y imagemagick
           IM=$(command -v magick || command -v convert)
           RES=android/app/src/main/res
+          # remove the fake checkerboard baked into the icon corners: crop 7% from every side
+          $IM icon.png -gravity center -crop 86%x86%+0+0 +repage icon_clean.png
           for d in mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432; do
             IFS=: read n s f <<< "$d"
             g=$((f*74/100))
-            $IM icon.png -resize ${s}x${s} $RES/mipmap-$n/ic_launcher.png
-            $IM icon.png -resize ${s}x${s} $RES/mipmap-$n/ic_launcher_round.png
-            $IM icon.png -resize ${g}x${g} -background none -gravity center -extent ${f}x${f} $RES/mipmap-$n/ic_launcher_foreground.png
+            $IM icon_clean.png -resize ${s}x${s} $RES/mipmap-$n/ic_launcher.png
+            $IM icon_clean.png -resize ${s}x${s} $RES/mipmap-$n/ic_launcher_round.png
+            $IM icon_clean.png -resize ${g}x${g} -background none -gravity center -extent ${f}x${f} $RES/mipmap-$n/ic_launcher_foreground.png
           done
           printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#0c1322</color>\n</resources>\n' > $RES/values/ic_launcher_background.xml
           find $RES -name 'ic_launcher*' | sort
