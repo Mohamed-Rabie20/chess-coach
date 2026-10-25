@@ -18,6 +18,9 @@ jobs:
         run: |
           mkdir -p www/engine
           cp index.html www/index.html
+          mkdir -p www/sounds
+          if [ -d sounds ]; then cp -r sounds/. www/sounds/; fi
+          for f in *.mp3; do if [ -f "$f" ]; then cp "$f" www/sounds/; fi; done
           curl -fL -o www/stockfish.js https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js
           ls -la www
       - name: Fast engine (Stockfish WASM, optional)
