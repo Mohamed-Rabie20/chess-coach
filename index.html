@@ -197,14 +197,7 @@ function doHint(){if(over)return;$('hn').textContent='🤔 Thinking...';
  setTimeout(()=>{const r=think(S,2500,12),m=r.m,p=S.b[m.f].toLowerCase();hint=m;sel=-1;R();
   const sc=Math.abs(r.sc)>90000?(r.sc>0?'Forced mate for you 🔥':'A very difficult position'):(r.sc>=0?'You are up about ':'You are down about ')+(Math.abs(r.sc)/100).toFixed(1)+' pawns';
   $('hn').innerHTML='<b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+'</b><ul>'+why(S,m).map(x=>'<li>'+x+'</li>').join('')+'</ul><div class="mu">Evaluation after it: '+sc+' (searched '+r.d+' moves deep)</div>'},30)}
-function review(pr,m){const r=think(pr,1000,6),bm=r.m;let loss=0;
- if(!(bm.f===m.f&&bm.t===m.t)){DL=Date.now()+1500;AB=false;const v=-search(apply(pr,m),r.d-1,-Infinity,Infinity);loss=AB?0:r.sc-v}
- const pn=up(NM[pr.b[bm.f].toLowerCase()])+' '+sqn(bm.f)+' → '+sqn(bm.t),w=why(pr,bm)[0];let t;
- if(loss<=15)t='✅ Excellent move, one of the best choices.';
- else if(loss<80)t='👍 Good move. Slightly better was: '+pn;
- else if(loss<250)t='⚠️ Inaccurate. Better was: '+pn+' — '+w;
- else t='❌ Mistake. Better was: '+pn+' — '+w;
- $('hn').textContent=t}
+
 function pick(){const lv=cfg.lv;if(lv>=3)return think(S,lv===3?1500:4000,12).m;
  const L=scoreAll(S,lv===1?1:2).sort((a,b)=>b.v-a.v);return lv===1?L[Math.floor(Math.random()*Math.min(4,L.length))].m:L[0].m}
 
@@ -236,7 +229,7 @@ function undo(){if(!H.length)return;S=H.pop();ML.pop();if(cfg.vs&&H.length&&S.t=
 function flipB(){flip=!flip;R()}
 function newG(){S=init();H=[];ML=[];sel=-1;hint=null;BD=null;flip=!!cfg.vs&&cfg.me==='b';save();$('hn').textContent='New game! Make your move.';upd();maybeCpu()}
 /* ---------- Stockfish (full strength, loads from CDN when the page is allowed to) ---------- */
-let SF=null,SFok=false,SFcb=null,Q=Promise.resolve();
+let SF=null,SFok=false,SFcb=null,Q=Promise.resolve(),SFpend=0,SFfail=0;
 async function initSF(){const en=$('en');try{
  let w=null,lbl='';
  if(window.SFNEW&&window.Worker){try{w=new Worker(window.SFNEW.file);await new Promise((ok,no)=>{const t=setTimeout(()=>no(0),30000);w.onerror=()=>{clearTimeout(t);no(0)};w.onmessage=e=>{if(String(e.data)==='readyok'){clearTimeout(t);ok()}};w.postMessage('uci');w.postMessage('isready')});WASMOK=true;lbl='Engine: '+window.SFNEW.name+' \u2713 (fast, full strength)'}catch(_){try{w&&w.terminate()}catch(__){}w=null;WASMOK=false}}
@@ -245,7 +238,7 @@ async function initSF(){const en=$('en');try{
   w=new Worker(URL.createObjectURL(new Blob([tx],{type:'text/javascript'})));
   await new Promise((ok,no)=>{const t=setTimeout(no,20000);w.onmessage=e=>{if(String(e.data)==='readyok'){clearTimeout(t);ok()}};w.postMessage('uci');w.postMessage('isready')});
   lbl='Engine: Stockfish 10 \u2713 (full strength)'}
- SF=w;SF.onmessage=e=>SFcb&&SFcb(String(e.data));if(WASMOK){SF.postMessage('setoption name Hash value 32');SF.postMessage('setoption name Threads value 1')}
+ SF=w;SF.onmessage=e=>{const l=String(e.data);if(SFpend>0&&l.startsWith('bestmove')){SFpend--;return}SFcb&&SFcb(l)};if(WASMOK){SF.postMessage('setoption name Hash value 32');SF.postMessage('setoption name Threads value 1')}
  SFok=true;en.textContent=lbl}
  catch(e){SF=null;en.textContent='Engine: built-in (Stockfish can only load when you open the downloaded file with internet)'}}
 function fen(s,fm){let f='';for(let r=0;r<8;r++){let e=0;for(let c=0;c<8;c++){const p=s.b[r*8+c];if(!p)e++;else{if(e){f+=e;e=0}f+=p}}if(e)f+=e;if(r<7)f+='/'}
@@ -255,20 +248,13 @@ function sfGo(s,T,skill,only,dc){return new Promise(res=>{let sc=0,d=0;SFcb=l=>{
  else if(l.startsWith('bestmove')){SFcb=null;const u=l.split(' ')[1],ms=legal(s),m=ms.find(q=>sqn(q.f)+sqn(q.t)===u.slice(0,4));res({m:m?(u[4]?{...m,pr:u[4]}:m):ms[0],sc,d:Math.max(d,1)})}};
  SF.postMessage('setoption name Skill Level value '+skill);SF.postMessage('position fen '+fen(s));SF.postMessage('go '+(WASMOK&&dc?'depth '+dc+' ':'')+'movetime '+T+(only?' searchmoves '+only:''))})}
 function bookMove(s,rnd){const i=s===S?ML.length:H.indexOf(s);if(i<0)return null;const pre=ML.slice(0,i),c=[];for(const[k]of OP){const q=k.split(' ');if(q.length>i&&pre.every((x,j)=>q[j]===x)&&!c.includes(q[i]))c.push(q[i])}return c.length?fromTok(s,rnd?c[Math.random()*c.length|0]:c[0]):null}
-async function eng0(s,T,maxD,skill=20,only){let dc=0;if(maxD===6){const q=AQP[AQ]||AQP[1];if(WASMOK){dc=q[0];T=q[1]}else T=Math.round(T*q[2])}if(!SFok&&maxD>=10&&!only){const bk=bookMove(s);if(bk)return{m:bk,sc:20,d:1}}if(SFok){const r=await Promise.race([sfGo(s,T,skill,only,dc),new Promise(r=>setTimeout(()=>r(null),T+8000))]);if(r)return r;SFcb=null;SFok=false;$('en').textContent='Engine: built-in (Stockfish stopped responding)'}return thinkA(s,T,maxD)}
+async function eng0(s,T,maxD,skill=20,only){let dc=0;if(maxD===6){const q=AQP[AQ]||AQP[1];if(WASMOK){dc=q[0];T=q[1]}else T=Math.round(T*q[2])}if(!SFok&&maxD>=10&&!only){const bk=bookMove(s);if(bk)return{m:bk,sc:20,d:1}}if(SFok&&legal(s).length){const r=await Promise.race([sfGo(s,T,skill,only,dc),new Promise(r=>setTimeout(()=>r(null),T+8000))]);if(r){SFfail=0;return r}SFcb=null;try{SF.postMessage('stop');SFpend++}catch(_){}if(++SFfail>=3){SFok=false;$('en').textContent='Engine: built-in (Stockfish stopped responding)'}}return thinkA(s,T,maxD)}
 const eng=(...a)=>(Q=Q.then(()=>eng0(...a)));
 function doHint(){if(over)return;$('hn').textContent='🤔 Thinking...';
  setTimeout(async()=>{const r=await eng(S,2500,12),m=r.m,p=S.b[m.f].toLowerCase();hint=m;sel=-1;R();
   const sc=Math.abs(r.sc)>90000?(r.sc>0?'Forced mate for you 🔥':'A very difficult position'):(r.sc>=0?'You are up about ':'You are down about ')+(Math.abs(r.sc)/100).toFixed(1)+' pawns';
   $('hn').innerHTML='<b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+'</b><ul>'+why(S,m).map(x=>'<li>'+x+'</li>').join('')+'</ul><div class="mu">Evaluation after it: '+sc+' (searched '+r.d+' moves deep)</div>'},30)}
-async function review(pr,m){const r=await eng(pr,1000,6),bm=r.m;let loss=0;
- if(!(bm.f===m.f&&bm.t===m.t)){if(SFok){const v=await eng(pr,1000,6,20,sqn(m.f)+sqn(m.t));loss=r.sc-v.sc}else{DL=Date.now()+1500;AB=false;const v=-search(apply(pr,m),r.d-1,-Infinity,Infinity);loss=AB?0:r.sc-v}}
- const pn=up(NM[pr.b[bm.f].toLowerCase()])+' '+sqn(bm.f)+' → '+sqn(bm.t),w=why(pr,bm)[0];let t;
- if(loss<=15)t='✅ Excellent move, one of the best choices.';
- else if(loss<80)t='👍 Good move. Slightly better was: '+pn;
- else if(loss<250)t='⚠️ Inaccurate. Better was: '+pn+' — '+w;
- else t='❌ Mistake. Better was: '+pn+' — '+w;
- $('hn').textContent=t}
+
 async function pick(){const lv=cfg.lv;if(SFok)return(await eng(S,[0,150,400,1000,2500][lv],12,[0,0,6,14,20][lv])).m;
  if(lv>=3)return think(S,lv===3?1500:4000,12).m;
  const L=scoreAll(S,lv===1?1:2).sort((a,b)=>b.v-a.v);return lv===1?L[Math.floor(Math.random()*Math.min(4,L.length))].m:L[0].m}
@@ -283,26 +269,7 @@ function lowAtt(b,sq,by){const r=sq>>3,c=sq&7,w=by==='w',g=(rr,cc)=>rr>=0&&rr<8&
  for(const[a,d]of N)if(g(r+a,c+d)===T('n'))m=Math.min(m,320);
  for(const[a,d]of K){let rr=r+a,cc=c+d,first=true;while(rr>=0&&rr<8&&cc>=0&&cc<8){const p=b[rr*8+cc];if(p){if((p<'a')===w){const l=p.toLowerCase(),dg=a&&d;if(l==='q')m=Math.min(m,900);else if(dg&&l==='b')m=Math.min(m,330);else if(!dg&&l==='r')m=Math.min(m,500);else if(first&&l==='k')m=Math.min(m,1000)}break}first=false;rr+=a;cc+=d}}
  return m}
-async function review(pr,m,bk){const r=await eng(pr,1000,6),bm=r.m,nl=legal(pr).length;let loss=0;
- if(!(bm.f===m.f&&bm.t===m.t)){if(SFok){const v=await eng(pr,1000,6,20,sqn(m.f)+sqn(m.t));loss=r.sc-v.sc}else{DL=Date.now()+1500;AB=false;const v=-search(apply(pr,m),r.d-1,-Infinity,Infinity);loss=AB?0:r.sc-v}}
- loss=Math.max(0,loss);const op=pr.t==='w'?'b':'w',n=apply(pr,m),pc=pr.b[m.f].toLowerCase(),cv=pr.b[m.t]?V[pr.b[m.t].toLowerCase()]:0,scA=r.sc-loss;
- if((r.sc>400&&scA>300)||r.sc<-400)loss=Math.min(loss,60);
- if(!legal(n).length&&inChk(n))loss=0;
- let sac=false;if(pc!=='p'&&pc!=='k'){const la=lowAtt(n.b,m.t,op);if(la<999)sac=(att(n.b,m.t,pr.t)?Math.max(0,V[pc]-la):V[pc])-cv>=200}
- let mg=0;if(loss<=15&&!bk&&nl>1&&!sac&&Math.abs(r.sc)<700){const L=scoreAll(pr,2).sort((a,b)=>b.v-a.v);mg=L[0].v-L[1].v}
- const bc=pr.b[bm.t]?V[pr.b[bm.t].toLowerCase()]:0;let k;
- if(nl===1)k='forced';else if(bk&&loss<=60)k='book';
- else if(loss<=15&&sac&&r.sc<500&&scA>-100)k='brilliant';
- else if(loss<=15&&mg>=200)k='great';
- else if(loss<=5)k='best';else if(loss<=25)k='excellent';else if(loss<=60)k='good';
- else if(loss>130&&(r.sc>90000||(bc>=300&&!att(apply(pr,bm).b,bm.t,op))))k='miss';
- else if(loss<=130)k='inacc';else if(loss<=300)k='mistake';else k='blunder';
- const t=RTG[k];BD={sq:m.t,sym:t[0],col:t[2]};R();
- const pn=up(NM[pr.b[bm.f].toLowerCase()])+' '+sqn(bm.f)+' → '+sqn(bm.t),wy=why(pr,bm)[0];
- let h=`<span style="background:${t[2]};color:#fff;padding:2px 9px;border-radius:12px;font-weight:700">${t[0]} ${t[1]}</span> ${t[3]}`;
- if(['good','inacc','mistake','miss','blunder'].includes(k))h+=`<div style="margin-top:6px">Better was: <b>${pn}</b> — ${wy}</div>`;
- if(loss>=30)h+=`<div class="mu">${loss>5000?'Lets the opponent force a mate':'Cost: about '+(loss/100).toFixed(1)+' pawns'}</div>`;
- $('hn').innerHTML=h}
+
 function play(m,cpu){const pr=S;H.push(S);ML.push(tok(m));const bk=isBook(ML);S=apply(S,m);sel=-1;hint=null;BD=null;save();upd();if(!cpu)setTimeout(()=>maybeCpu(()=>review(pr,m,bk)),40)}
 function maybeCpu(after){if(!cfg.vs||over||S.t!==cpuSide()){if(after)after();return}$('st').textContent='🤖 Computer is thinking...';setTimeout(async()=>{const m=await pick();if(m)play(m,true);if(after)setTimeout(after,50)},60)}
 /* ---------- v3: draws, promotion choice, eval bar, summary, review, PGN/FEN, arrows, sound ---------- */
@@ -717,7 +684,7 @@ function click(i){const s=T.s;if(!s||T.busy)return;if((T.tab==='o'||T.tab==='z')
 /* ---- v8: puzzles ---- */
 const PZS=[{f:'6k1/5ppp/8/7n/8/8/5PPP/R5K1 b - - 0 1',m:'h5g3 a1a8',r:600,t:'mateIn1 backRankMate'}];
 const pzs=()=>{const L=LS('chessPz',[]);return L.length?L:PZS};
-function tZ(){const L=LS('chessPz',[]);T.s=null;draw('<div class="bt" style="margin:0"><select id="zr"><option value="0">All ratings</option><option value="1">Easy (up to 1200)</option><option value="2">Medium (1200-1600)</option><option value="3">Hard (1600-2000)</option><option value="4">Expert (2000+)</option></select><button class="p" onclick="TRN.zn()">New puzzle</button></div><div class="mu" style="margin:6px 0">'+(L.length?L.length+' puzzles loaded.':'Using 1 built-in sample puzzle.')+' Load more: choose lichess_db_puzzle.csv <input type="file" id="zf" accept=".csv,.txt" onchange="TRN.zl(this)"></div><div id="bdw"></div><div id="tm" class="mu"></div>');const z=root.querySelector('#zr');z.value=LS('chessZb','0');z.onchange=e=>SV('chessZb',e.target.value);zNew()}
+function tZ(){const L=LS('chessPz',[]);T.s=null;if(!L.length&&!zAuto){zAuto=true;fetch('slice.csv').then(r=>r.ok?r.text():Promise.reject()).then(tx=>{const k=zParse(tx);if(k.length){SV('chessPz',k);if(T.tab==='z')tZ()}}).catch(()=>{})}draw('<div class="bt" style="margin:0"><select id="zr"><option value="0">All ratings</option><option value="1">Easy (up to 1200)</option><option value="2">Medium (1200-1600)</option><option value="3">Hard (1600-2000)</option><option value="4">Expert (2000+)</option></select><button class="p" onclick="TRN.zn()">New puzzle</button></div><div class="mu" style="margin:6px 0">'+(L.length?L.length+' puzzles loaded.':'Using 1 built-in sample puzzle.')+' Load more: choose lichess_db_puzzle.csv <input type="file" id="zf" accept=".csv,.txt" onchange="TRN.zl(this)"></div><div id="bdw"></div><div id="tm" class="mu"></div>');const z=root.querySelector('#zr');z.value=LS('chessZb','0');z.onchange=e=>SV('chessZb',e.target.value);zNew()}
 function zNew(){const R=[[0,1e9],[0,1200],[1200,1600],[1600,2000],[2000,1e9]][+LS('chessZb','0')],P=pzs().filter(p=>p.r>=R[0]&&p.r<R[1]),L=P.length?P:pzs(),p=T.pz=L[Math.random()*L.length|0];
  T.mv=p.m.split(' ');T.zi=0;T.s=parseFEN(p.f);T.user=T.s.t==='w'?'b':'w';T.sel=-1;rb();say('Opponent is moving…');
  setTimeout(()=>{const m=fromTok(T.s,T.mv[0]);if(!m)return say('Bad puzzle data.');T.s=apply(T.s,m);T.zi=1;rb();say('Find the best move for '+(T.user==='w'?'White':'Black')+' <span class="mu">(rating '+p.r+(p.t?' · '+esc(p.t.split(' ')[0]):'')+')</span><div class="bt"><button onclick="TRN.zh()">Hint</button><button onclick="TRN.zs()">Show solution</button></div>')},500)}
@@ -727,8 +694,10 @@ function zMove(m){const s=T.s,t=tok(m),n=apply(s,m),mate=!legal(n).length&&inChk
  else{rb();say('❌ Not the move. Try again.')}}
 function zHint(){const m=fromTok(T.s,T.mv[T.zi]);if(m)say('💡 Move the piece on <b>'+sqn(m.f)+'</b>.')}
 function zSol(){const m=fromTok(T.s,T.mv[T.zi]);if(m)say('Solution: <b>'+san(T.s,m)+'</b><div class="bt"><button class="p" onclick="TRN.zn()">New puzzle</button></div>')}
-function zLoad(inp){const f=inp.files[0];if(!f)return;say('Reading…');f.slice(0,24e6).text().then(tx=>{const out=[];for(const l of tx.split('\n')){const c=l.split(',');if(c.length<8||!/ [wb] /.test(c[1])||!+c[3])continue;out.push({f:c[1],m:c[2],r:+c[3],t:c[7]})}
- for(let i=out.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[out[i],out[j]]=[out[j],out[i]]}const k=out.slice(0,3000);if(!k.length)return say('No puzzles found in that file.');SV('chessPz',k);say('Loaded '+k.length+' puzzles.');setTimeout(tZ,900)}).catch(()=>say('Could not read that file.'))}
+function zParse(tx){const out=[];for(const l of tx.split('\n')){const c=l.split(',');if(c.length<8||!/ [wb] /.test(c[1])||!+c[3])continue;out.push({f:c[1],m:c[2],r:+c[3],t:c[7]})}
+ for(let i=out.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[out[i],out[j]]=[out[j],out[i]]}return out.slice(0,3000)}
+function zLoad(inp){const f=inp.files[0];if(!f)return;say('Reading...');f.slice(0,24e6).text().then(tx=>{const k=zParse(tx);if(!k.length)return say('No puzzles found in that file.');SV('chessPz',k);say('Loaded '+k.length+' puzzles.');setTimeout(tZ,900)}).catch(()=>say('Could not read that file.'))}
+let zAuto=false;
 window.TRN={zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2};
 })();
 </script>
