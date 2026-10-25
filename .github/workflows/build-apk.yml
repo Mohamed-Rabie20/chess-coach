@@ -10,9 +10,20 @@ on:
           - lite
           - full
   push:
+    paths:
+      - index.html
+      - slice.csv
+      - icon.png
+      - sounds/**
+      - "*.mp3"
+      - .github/workflows/**
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +33,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-capacitor6-v1
       - name: Prepare web files
         run: |
           mkdir -p www/engine
@@ -82,6 +99,7 @@ jobs:
           npx cap sync android
       - name: App icon
         run: |
+          if [ ! -f icon.png ]; then echo "icon.png not found - keeping the default Capacitor icon"; exit 0; fi
           command -v magick >/dev/null || command -v convert >/dev/null || { sudo apt-get update -y && sudo apt-get install -y imagemagick; }
           IM=$(command -v magick || command -v convert)
           RES=android/app/src/main/res
@@ -105,3 +123,5 @@ jobs:
         with:
           name: Chess-Coach-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error
