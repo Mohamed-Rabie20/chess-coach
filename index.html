@@ -593,9 +593,15 @@ snd=function(k){if(!SO||VOL<=0)return;if(!KEYS.includes(k))return _o(k);
  }catch(e){return _o(k)}}}
 </script>
 <script>
-/* custom sound files: put mp3 files in a "sounds" folder next to index.html; any missing file falls back to the built-in synth sound */
-{const MAP={m:'move',mo:'move-opponent',x:'capture',xo:'capture','+':'check',c:'castle',p:'promote',pm:'premove',s:'start',w:'lowtime',e:'end'},ok={};
-[...new Set(Object.values(MAP))].forEach(f=>{try{const a=new Audio('sounds/'+f+'.mp3');a.preload='auto';a.addEventListener('canplaythrough',()=>{ok[f]=a},{once:true});a.addEventListener('error',()=>{},{once:true});a.load()}catch(e){}});
-const _s=snd;snd=function(k){if(k==='ew'||k==='el')return;const f=MAP[k],a0=ok[f]||(k==='mo'?ok.move:null);if(f&&a0&&SO&&VOL>0){try{const c=a0.cloneNode();c.volume=Math.min(1,VOL);c.play().catch(()=>{});return}catch(e){}}return _s(k)}}
+/* custom sound files: mp3 files next to index.html (copied into the app by the build); missing files fall back to the built-in synth. win/lose/draw all play end.mp3 (or stay silent if it is missing) */
+{const MAP={m:'move',mo:'move-opponent',x:'capture',xo:'capture','+':'check',c:'castle',p:'promote',pm:'premove',s:'start',w:'lowtime',e:'end',ew:'end',el:'end'},B={};let le=0;
+const ctx=()=>{AC=AC||new(window.AudioContext||window.webkitAudioContext)();return AC};
+[...new Set(Object.values(MAP))].forEach(f=>{try{fetch('sounds/'+f+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(ab=>new Promise((res,rej)=>ctx().decodeAudioData(ab,res,rej))).then(b=>{B[f]=b}).catch(()=>{})}catch(e){}});
+const _s=snd;snd=function(k){if(!SO||VOL<=0)return;
+ if(k==='e'||k==='ew'||k==='el'){const n=Date.now();if(n-le<1500)return;le=n}
+ const f=MAP[k],b=B[f]||(k==='mo'?B.move:null);
+ if(f&&b){try{const c=ctx();if(c.state==='suspended'&&c.resume)c.resume().catch(()=>{});const s=c.createBufferSource(),g=c.createGain();s.buffer=b;g.gain.value=Math.min(1,VOL);s.connect(g);g.connect(c.destination);s.start();return}catch(e){}}
+ if(k==='ew'||k==='el')return;
+ return _s(k)}}
 </script>
 </body></html>
