@@ -646,7 +646,7 @@ if(!rnd)return fromTok(s,best);let r=Math.random()*tot;for(const[m,c]of cnt){r-=
 </script>
 <script>
 /* v7: Train panel - mistakes drill, opening trainer, chess.com import + opening stats. PGN paste is unchanged. */
-{
+(()=>{
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const parseFEN=f=>{const p=f.trim().split(/\s+/),b=[];for(const ch of p[0].replace(/\//g,'')){if(/\d/.test(ch))for(let i=0;i<+ch;i++)b.push('');else b.push(ch)}
@@ -730,7 +730,7 @@ function zSol(){const m=fromTok(T.s,T.mv[T.zi]);if(m)say('Solution: <b>'+san(T.s
 function zLoad(inp){const f=inp.files[0];if(!f)return;say('Reading…');f.slice(0,24e6).text().then(tx=>{const out=[];for(const l of tx.split('\n')){const c=l.split(',');if(c.length<8||!/ [wb] /.test(c[1])||!+c[3])continue;out.push({f:c[1],m:c[2],r:+c[3],t:c[7]})}
  for(let i=out.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[out[i],out[j]]=[out[j],out[i]]}const k=out.slice(0,3000);if(!k.length)return say('No puzzles found in that file.');SV('chessPz',k);say('Loaded '+k.length+' puzzles.');setTimeout(tZ,900)}).catch(()=>say('Could not read that file.'))}
 window.TRN={zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2};
-}
+})();
 </script>
 <script>
 /* v8: explanation language (English / العربية) - translates text live, English stays the source */
@@ -749,7 +749,7 @@ const D=[['A great piece sacrifice that still works out.','تضحية رائعة
 ["The engine's top choice.",'اختيار المحرك الأول.'],['Almost as good as the best move.','تكاد تكون بجودة أفضل نقلة.'],['A solid move.','نقلة سليمة.'],['Known opening theory.','نظرية افتتاحية معروفة.'],
 ['The only legal move.','النقلة القانونية الوحيدة.'],['Slightly weakens your position.','تضعف موقفك قليلاً.'],['This gives away a lot.','هذه النقلة تخسّرك الكثير.'],['You missed a big chance.','فوّتّ فرصة كبيرة.'],['A serious error.','خطأ فادح.'],
 ['Better was:','الأفضل كان:'],['(blue arrow)','(السهم الأزرق)'],['Lets the opponent force a mate','تسمح للخصم بإجبارك على كش مات'],
-['Brilliant','رائعة'],['Great move','نقلة عظيمة'],['Best move','أفضل نقلة'],['Excellent','ممتازة'],['Inaccuracy','عدم دقة'],['Mistake','غلطة'],['Blunder','خطأ فادح'],['Forced','إجبارية'],['Book moves','نقلات الكتاب'],['Book','كتاب'],['Good','جيدة'],['Miss','فرصة ضائعة'],
+['Chess Coach','مدرب الشطرنج'],['Game Review','مراجعة الجيم'],['Players','اللاعبون'],['Accuracy','الدقة'],['Tap the graph to jump to a move.','اضغط على الرسم للانتقال إلى نقلة.'],['Start Review','ابدأ المراجعة'],['Review','مراجعة'],['Tips: ON','النصائح: شغّال'],['Tips: OFF','النصائح: متوقف'],['Install app','ثبّت التطبيق'],['Draw','تعادل'],['Brilliant','رائعة'],['Great move','نقلة عظيمة'],['Best move','أفضل نقلة'],['Excellent','ممتازة'],['Inaccuracy','عدم دقة'],['Mistake','غلطة'],['Blunder','خطأ فادح'],['Forced','إجبارية'],['Book moves','نقلات الكتاب'],['Book','كتاب'],['Good','جيدة'],['Miss','فرصة ضائعة'],
 ['Checkmate!','كش مات!'],['Castling: protects your king and brings the rook into play','التبييت: يحمي ملكك ويُدخل القلعة في اللعب'],['Promotes the pawn to a queen','يرقّي البيدق إلى وزير'],
 ['Captures the','يأخذ'],['(the square is attacked, so it is likely a trade)','(المربع مهاجَم، فغالباً تبادل)'],['and nothing can recapture','ولا يمكن استرجاعه'],['Gives check and forces a reply','يعطي كش ويفرض ردّاً'],
 ['Saves your','ينقذ'],['from an attack','من هجوم'],['Develops a piece toward the center','يطوّر قطعة نحو المركز'],['Fights for the center','ينافس على المركز'],['Improves your piece and prepares a stronger plan','يحسّن قطعتك ويمهّد لخطة أقوى'],
