@@ -644,4 +644,144 @@ for(const[q]of window.BK){if(q.length>i&&pre.every((x,j)=>q[j]===x))cnt.set(q[i]
 if(!cnt.size)return null;let best=null,tot=0,mx=Math.max(...cnt.values());for(const[m,c]of cnt){if(c<mx*.03&&cnt.size>1){cnt.delete(m);continue}tot+=c;if(!best||c>cnt.get(best))best=m}
 if(!rnd)return fromTok(s,best);let r=Math.random()*tot;for(const[m,c]of cnt){r-=c;if(r<0)return fromTok(s,m)}return fromTok(s,best)}
 </script>
+<script>
+/* v7: Train panel - mistakes drill, opening trainer, chess.com import + opening stats. PGN paste is unchanged. */
+{
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const parseFEN=f=>{const p=f.trim().split(/\s+/),b=[];for(const ch of p[0].replace(/\//g,'')){if(/\d/.test(ch))for(let i=0;i<+ch;i++)b.push('');else b.push(ch)}
+ if(b.length!==64)return null;const cs=p[2]||'-';let ep=-1;if(p[3]&&p[3]!=='-')ep=(8-+p[3][1])*8+'abcdefgh'.indexOf(p[3][0]);
+ return{b,t:p[1]==='b'?'b':'w',c:{K:cs.includes('K')?1:0,Q:cs.includes('Q')?1:0,k:cs.includes('k')?1:0,q:cs.includes('q')?1:0},ep,hm:+p[4]||0}};
+const toToks=pg=>{const x=String(pg).replace(/\$\d+|\be\.p\./g,' ').replace(/\{[^}]*\}|\([^)]*\)|\[[^\]]*\]|;[^\n]*/g,' ').replace(/\d+\.(\.\.)?/g,' ').replace(/1-0|0-1|1\/2-1\/2|\*/g,' '),tk=x.split(/\s+/).filter(Boolean);
+ let s=init();const out=[];for(const t of tk){const w=t.replace(/[+#!?]/g,'').replace(/0/g,'O'),m=legal(s).find(q=>san(s,q).replace(/[+#]/g,'')===w);if(!m)return null;out.push(tok(m));s=apply(s,m)}return out};
+const bk=()=>window.BK||[];
+const nameOf=tk=>{let b='',n=0;for(const[q,nm]of bk()){if(q.length>=n&&q.length<=tk.length&&q.every((x,i)=>tk[i]===x)){b=nm;n=q.length}}return b};
+const fam=n=>(n||'Unknown opening').split(':')[0];
+const T={tab:'m',s:null,sel:-1,pre:[],user:'w',fam:'',mis:0,cur:null,busy:false,msg:''};
+const root=document.createElement('div');root.id='trp';root.style.cssText='display:none;margin:10px 0;padding:10px;border-radius:12px;background:var(--card);border:1px solid var(--mu)';
+const tb=Array.from(document.querySelectorAll('button')).find(b=>/Analyze/.test(b.textContent));
+if(tb){const nb=document.createElement('button');nb.textContent='🏋 Train';nb.onclick=()=>{root.style.display=root.style.display==='none'?'block':'none';if(root.style.display==='block'){harvest();tab(T.tab)}};tb.parentNode.appendChild(nb);$('hn').parentNode.insertBefore(root,$('hn'))}
+function harvest(){const L=LS('chessMist',[]);let add=0;try{for(let i=0;i<RV.length;i++){const r=RV[i];if(!r||!H[i]||!r.bm||!['mistake','blunder','miss'].includes(r.k))continue;const f=fen(H[i]);if(L.some(x=>x.f===f))continue;L.push({f,b:r.bm,p:ML[i],k:r.k,n:0,due:0,d:Date.now()});add++}}catch(e){}if(add){if(L.length>300)L.splice(0,L.length-300);SV('chessMist',L)}}
+{const _a=analyzeAll;analyzeAll=async function(){await _a.apply(this,arguments);harvest()}}
+function board(){const s=T.s;if(!s)return'';const fl=T.tab==='o'||T.tab==='z'?T.user==='b':s.t==='b',lm=T.sel>=0?legal(s).filter(m=>m.f===T.sel).map(m=>m.t):[];let h='<div style="width:var(--W);display:grid;grid-template-columns:repeat(8,1fr);border-radius:6px;overflow:hidden;font-size:calc(var(--W)/8*.78);line-height:1;margin:8px 0">';
+ for(let k=0;k<64;k++){const i=fl?63-k:k,p=s.b[i],dk=((i>>3)+(i&7))%2;h+='<div class="sq '+(dk?'dk':'lt')+(i===T.sel?' sel':'')+(lm.includes(i)?' mv':'')+'" onclick="TRN.c('+i+')">'+(p?'<span class="'+(p<'a'?'pw':'pb')+'">'+G[p.toLowerCase()]+'</span>':'')+'</div>'}return h+'</div>'}
+function say(m){T.msg=m;const e=root.querySelector('#tm');if(e)e.innerHTML=m}
+function draw(extra){const tabs=[['m','🎯 Mistakes'],['o','📖 Openings'],['s','📈 Stats'],['i','👤 chess.com'],['z','🧩 Puzzles']];root.innerHTML='<div class="bt" style="margin:0 0 6px">'+tabs.map(t=>'<button class="'+(T.tab===t[0]?'p':'')+'" onclick="TRN.t(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>'+(extra||'')}
+function tab(t){T.tab=t;T.s=null;T.sel=-1;T.msg='';({m:tM,o:tO,s:tS,i:tI,z:tZ})[t]()}
+/* ---- mistakes drill ---- */
+function due(){return LS('chessMist',[]).filter(x=>x.due<=Date.now()).sort((a,b)=>a.due-b.due)}
+function tM(){const L=LS('chessMist',[]),d=due();if(!L.length){draw('<div class="mu">No saved mistakes yet. Play or load a game, tap 🔍 Analyze, and your mistakes and blunders are saved here as a drill.</div>');return}
+ if(!d.length){draw('<div>🎉 Nothing due now. <span class="mu">'+L.length+' saved positions, they come back after a few days.</span></div>');return}
+ const it=T.cur=d[0];T.s=parseFEN(it.f);T.tries=0;draw('<div><b>Find the best move for '+(T.s.t==='w'?'White':'Black')+'</b> <span class="mu">('+d.length+' due of '+L.length+')</span></div><div id="bdw">'+board()+'</div><div id="tm" class="mu">Tap a piece, then its target square.</div><div class="bt"><button onclick="TRN.skip()">Show answer</button></div>')}
+async function userMove(m){const s=T.s;if(T.tab==='m')return mMove(m);if(T.tab==='o')return oMove(m);if(T.tab==='z')return zMove(m)}
+function upMist(ok){const L=LS('chessMist',[]),i=L.findIndex(x=>x.f===T.cur.f);if(i<0)return;const D=864e5,st=[0,1,3,7,14,30];L[i].n=ok?Math.min(5,L[i].n+1):0;L[i].due=ok?Date.now()+st[L[i].n]*D:Date.now();SV('chessMist',L)}
+async function mMove(m){if(T.busy)return;const it=T.cur,s=T.s,t=tok(m);let ok=t===it.b,why2='';T.busy=true;
+ if(!ok&&t!==it.p&&typeof SFok!=='undefined'&&SFok){say('Checking…');try{const r=await eng(s,800,6),v=await eng(s,800,6,20,t);if(r.sc-v.sc<=30){ok=true;why2=' (the engine likes your move too)'}}catch(e){}}
+ T.busy=false;T.sel=-1;
+ if(ok){upMist(true);T.s=apply(s,m);redraw('✅ Correct: <b>'+san(s,m)+'</b>'+why2+'.<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}
+ else{T.tries++;if(t===it.p)say('❌ That is the move you played in your game. Try again.');else say('❌ Not the best move. Try again.');if(T.tries>=2){upMist(false);redraw('The best move was <b>'+san(s,fromTok(s,it.b))+'</b>.<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}else R2()}}
+function skip(){const it=T.cur,s=parseFEN(it.f);upMist(false);T.s=s;redraw('The best move was <b>'+san(s,fromTok(s,it.b))+'</b>.<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}
+function redraw(m){rb();say(m)}
+function R2(){rb()}
+/* ---- opening trainer ---- */
+function fams(){const c={};for(const[q,n]of bk()){const f=fam(n);c[f]=(c[f]||0)+1}return Object.entries(c).filter(x=>x[1]>=6).sort((a,b)=>b[1]-a[1]).slice(0,80)}
+function cands(){const i=T.pre.length,m=new Map();for(const[q,n]of bk()){if(!n.startsWith(T.fam)||q.length<=i||!T.pre.every((x,j)=>q[j]===x))continue;m.set(q[i],(m.get(q[i])||0)+1)}const mx=Math.max(0,...m.values());for(const[k,v]of m)if(v<mx*.03&&m.size>1)m.delete(k);return m}
+function tO(){const F=fams();draw('<div class="bt" style="margin:0"><select id="of">'+F.map(f=>'<option value="'+esc(f[0])+'"'+(f[0]===T.fam?' selected':'')+'>'+esc(f[0])+' ('+f[1]+')</option>').join('')+'</select><select id="os"><option value="w">I play White</option><option value="b"'+(T.user==='b'?' selected':'')+'>I play Black</option></select><button class="p" onclick="TRN.go()">Start</button></div><div class="mu" style="margin-top:6px">Practise a known opening: you must find the book moves, the computer replies from the same book.</div>'+(T.s?'<div id="bdw">'+board()+'</div><div id="tm"></div>':''))}
+function oGo(){T.fam=root.querySelector('#of').value;T.user=root.querySelector('#os').value;T.s=init();T.pre=[];T.mis=0;T.sel=-1;tO();oStep()}
+function oStep(){const c=cands();if(!c.size){const full2=nameOf(T.pre),m=T.mis;say('🏁 Line complete'+(full2?': <b>'+esc(full2)+'</b>':'')+'. Mistakes: '+m+'.<div class="bt"><button class="p" onclick="TRN.go()">Another line</button></div>');return}
+ if(T.s.t!==T.user){let tot=0;for(const v of c.values())tot+=v;let r=Math.random()*tot,pick=null;for(const[k,v]of c){r-=v;if(r<0){pick=k;break}}pick=pick||[...c.keys()][0];const m=fromTok(T.s,pick);T.pre.push(pick);setTimeout(()=>{T.s=apply(T.s,m);rb();oStep()},350);return}
+ say('Your move ('+(T.user==='w'?'White':'Black')+'). Book moves exist here: find one.')}
+function rb(){const h=root.querySelector('#bdw');if(h)h.innerHTML=board()}
+function oMove(m){const c=cands(),t=tok(m),s0=T.s;if(c.has(t)){let tot=0;for(const v of c.values())tot+=v;const pc=Math.round(100*c.get(t)/tot),sn=san(s0,m);T.pre.push(t);T.s=apply(s0,m);T.sel=-1;rb();say('✅ '+sn+' <span class="mu">('+pc+'% of book lines)</span>');setTimeout(oStep,300)}
+ else{T.mis++;T.sel=-1;const a=[...c.entries()].sort((x,y)=>y[1]-x[1]).slice(0,3).map(x=>san(s0,fromTok(s0,x[0])));rb();say('❌ Not a book move here. Book moves: <b>'+a.join(', ')+'</b>')}}
+/* ---- stats ---- */
+function games(){const out=[];for(const g of LS('chessArch',[])){if(!g.vs||g.res==null||!g.pgn)continue;const t=toToks(g.pgn);if(!t)continue;out.push({m:t,c:/\[White "You"\]/.test(g.pgn)?'w':'b',r:g.res,d:g.d,o:g.bot,pgn:g.pgn,src:'app'})}for(const g of LS('chessImp',[]))out.push({...g,m:g.m.split(' '),src:'cc'});return out}
+function tS(){const G2=games();if(!G2.length){draw('<div class="mu">No finished games yet. Play vs the computer or import your chess.com games.</div>');return}
+ const st={};for(const g of G2){const k=fam(nameOf(g.m))+'|'+g.c,e=st[k]||(st[k]={n:0,w:0,d:0,l:0,s:0});e.n++;if(g.r===1)e.w++;else if(g.r===.5)e.d++;else e.l++;e.s+=g.r}
+ const rows=Object.entries(st).sort((a,b)=>b[1].n-a[1].n).slice(0,25).map(([k,e])=>{const[f,c]=k.split('|'),p=Math.round(100*e.s/e.n);return'<tr><td>'+(c==='w'?'⚪':'⚫')+' '+esc(f)+'</td><td>'+e.n+'</td><td>'+e.w+'/'+e.d+'/'+e.l+'</td><td'+(e.n>=3&&p<40?' style="color:#ca3431;font-weight:700"':'')+'>'+p+'%'+(e.n>=3&&p<40?' ⚠':'')+'</td></tr>'}).join('');
+ draw('<div class="mu">'+G2.length+' games. W/D/L = wins/draws/losses, last column = score.</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px"><tr><th align=left>Opening</th><th>Games</th><th>W/D/L</th><th>Score</th></tr>'+rows+'</table></div>')}
+/* ---- chess.com import ---- */
+function tI(){const L=LS('chessImp',[]);draw('<div class="bt" style="margin:0"><input id="cu" placeholder="chess.com username" value="'+esc(LS('chessUser',''))+'" style="flex:1;min-width:120px;padding:9px;border-radius:10px;border:1px solid var(--mu);background:var(--card);color:var(--tx)"><select id="cm"><option value="1">1 month</option><option value="2" selected>2 months</option><option value="3">3 months</option><option value="6">6 months</option></select><button class="p" onclick="TRN.imp()">Import</button></div><div id="tm" class="mu" style="margin:6px 0">Needs internet. You can still paste a PGN with 📋 PGN/FEN.</div>'+(L.length?'<div><b>'+L.length+' imported games</b></div>'+L.slice(0,15).map((g,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(128,128,128,.25)"><span>'+(g.r===1?'✅':g.r===0?'❌':'🤝')+' '+esc(g.o)+' <span class="mu">'+new Date(g.d).toLocaleDateString()+' · '+esc(fam(nameOf(g.m.split(' '))))+'</span></span><button onclick="TRN.open('+i+')">Review</button></div>').join(''):''))}
+async function imp(){const u=root.querySelector('#cu').value.trim().toLowerCase(),n=+root.querySelector('#cm').value;if(!u)return say('Type your username first.');SV('chessUser',u);say('Loading…');
+ try{const A=(await(await fetch('https://api.chess.com/pub/player/'+encodeURIComponent(u)+'/games/archives')).json()).archives||[];if(!A.length)return say('No games found for this user.');
+  const L=LS('chessImp',[]),seen=new Set(L.map(x=>x.u));let add=0;
+  for(const url of A.slice(-n).reverse()){say('Loading '+url.slice(-7)+'…');const j=await(await fetch(url)).json();
+   for(const g of(j.games||[]).reverse()){if(g.rules!=='chess'||!g.pgn||seen.has(g.url))continue;const w=(g.white.username||'').toLowerCase()===u,me=w?g.white:g.black,op=w?g.black:g.white,m=toToks(g.pgn);if(!m)continue;
+    const DR=['agreed','repetition','stalemate','insufficient','50move','timevsinsufficient'],r=me.result==='win'?1:DR.includes(me.result)?.5:0;
+    L.push({u:g.url,m:m.join(' '),c:w?'w':'b',r,o:op.username+' ('+op.rating+')',d:(g.end_time||0)*1000,pgn:g.pgn.replace(/\{[^}]*\}/g,'').replace(/\s+/g,' ').trim()});seen.add(g.url);add++;await new Promise(z=>setTimeout(z,0))}}
+  L.sort((a,b)=>b.d-a.d);if(L.length>200)L.length=200;SV('chessImp',L);tI();say('Imported '+add+' new games.')}
+ catch(e){say('Could not load games (no internet, wrong username, or the site blocked the request). You can still paste a PGN.')}}
+function open2(i){const g=LS('chessImp',[])[i];if(!g)return;$('px').value=g.pgn;loadPGN();flip=g.c==='b';upd();root.style.display='none';window.scrollTo(0,0)}
+function click(i){const s=T.s;if(!s||T.busy)return;if((T.tab==='o'||T.tab==='z')&&s.t!==T.user)return;const lm=legal(s);if(T.sel>=0){const mv=lm.filter(m=>m.f===T.sel&&m.t===i);if(mv.length){const m=mv.find(x=>x.pr==='q')||mv[0];return userMove(m)}}
+ T.sel=lm.some(m=>m.f===i)?i:-1;rb()}
+/* ---- v8: puzzles ---- */
+const PZS=[{f:'6k1/5ppp/8/7n/8/8/5PPP/R5K1 b - - 0 1',m:'h5g3 a1a8',r:600,t:'mateIn1 backRankMate'}];
+const pzs=()=>{const L=LS('chessPz',[]);return L.length?L:PZS};
+function tZ(){const L=LS('chessPz',[]);T.s=null;draw('<div class="bt" style="margin:0"><select id="zr"><option value="0">All ratings</option><option value="1">Easy (up to 1200)</option><option value="2">Medium (1200-1600)</option><option value="3">Hard (1600-2000)</option><option value="4">Expert (2000+)</option></select><button class="p" onclick="TRN.zn()">New puzzle</button></div><div class="mu" style="margin:6px 0">'+(L.length?L.length+' puzzles loaded.':'Using 1 built-in sample puzzle.')+' Load more: choose lichess_db_puzzle.csv <input type="file" id="zf" accept=".csv,.txt" onchange="TRN.zl(this)"></div><div id="bdw"></div><div id="tm" class="mu"></div>');const z=root.querySelector('#zr');z.value=LS('chessZb','0');z.onchange=e=>SV('chessZb',e.target.value);zNew()}
+function zNew(){const R=[[0,1e9],[0,1200],[1200,1600],[1600,2000],[2000,1e9]][+LS('chessZb','0')],P=pzs().filter(p=>p.r>=R[0]&&p.r<R[1]),L=P.length?P:pzs(),p=T.pz=L[Math.random()*L.length|0];
+ T.mv=p.m.split(' ');T.zi=0;T.s=parseFEN(p.f);T.user=T.s.t==='w'?'b':'w';T.sel=-1;rb();say('Opponent is moving…');
+ setTimeout(()=>{const m=fromTok(T.s,T.mv[0]);if(!m)return say('Bad puzzle data.');T.s=apply(T.s,m);T.zi=1;rb();say('Find the best move for '+(T.user==='w'?'White':'Black')+' <span class="mu">(rating '+p.r+(p.t?' · '+esc(p.t.split(' ')[0]):'')+')</span><div class="bt"><button onclick="TRN.zh()">Hint</button><button onclick="TRN.zs()">Show solution</button></div>')},500)}
+function zMove(m){const s=T.s,t=tok(m),n=apply(s,m),mate=!legal(n).length&&inChk(n);T.sel=-1;
+ if(t===T.mv[T.zi]||mate){T.s=n;T.zi++;rb();if(T.zi>=T.mv.length||mate)return say('✅ Puzzle solved!<div class="bt"><button class="p" onclick="TRN.zn()">New puzzle</button></div>');
+  say('✅ Correct. Keep going…');setTimeout(()=>{const o=fromTok(T.s,T.mv[T.zi]);if(!o)return;T.s=apply(T.s,o);T.zi++;rb();say('Your move.')},400)}
+ else{rb();say('❌ Not the move. Try again.')}}
+function zHint(){const m=fromTok(T.s,T.mv[T.zi]);if(m)say('💡 Move the piece on <b>'+sqn(m.f)+'</b>.')}
+function zSol(){const m=fromTok(T.s,T.mv[T.zi]);if(m)say('Solution: <b>'+san(T.s,m)+'</b><div class="bt"><button class="p" onclick="TRN.zn()">New puzzle</button></div>')}
+function zLoad(inp){const f=inp.files[0];if(!f)return;say('Reading…');f.slice(0,24e6).text().then(tx=>{const out=[];for(const l of tx.split('\n')){const c=l.split(',');if(c.length<8||!/ [wb] /.test(c[1])||!+c[3])continue;out.push({f:c[1],m:c[2],r:+c[3],t:c[7]})}
+ for(let i=out.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[out[i],out[j]]=[out[j],out[i]]}const k=out.slice(0,3000);if(!k.length)return say('No puzzles found in that file.');SV('chessPz',k);say('Loaded '+k.length+' puzzles.');setTimeout(tZ,900)}).catch(()=>say('Could not read that file.'))}
+window.TRN={zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2};
+}
+</script>
+<script>
+/* v8: explanation language (English / العربية) - translates text live, English stays the source */
+(()=>{
+const PN={pawn:'بيدق',knight:'حصان',bishop:'فيل',rook:'قلعة',queen:'وزير',king:'ملك'};
+const RU=[[/(Pawn|Knight|Bishop|Rook|Queen|King) (?=[a-h][1-8])/g,(m,p)=>PN[p.toLowerCase()]+' '],
+[/Hint (\d) of 3/g,'تلميح $1 من 3'],[/Analyzing move (\d+) of (\d+)/g,'جارٍ تحليل النقلة $1 من $2'],[/Reviewing move (\d+) of (\d+)/g,'مراجعة النقلة $1 من $2'],
+[/(\d+) due of (\d+)/g,'$1 مستحق من $2'],[/\(rating (\d+)/g,'(التقييم $1'],[/Cost: about ([\d.]+) pawns/g,'الخسارة: حوالي $1 بيدق'],
+[/\((\d+)% of book lines\)/g,'($1٪ من خطوط الكتاب)'],[/(\d+) puzzles loaded/g,'تم تحميل $1 لغز'],[/Loaded (\d+) puzzles/g,'تم تحميل $1 لغز'],
+[/Your move allows checkmate: (\S+)\./g,'نقلتك تسمح بكش مات: $1.'],[/It lets the opponent win your (\w+) with (\S+)\./g,'تسمح للخصم بأخذ $1 عندك بنقلة $2.'],
+[/You missed checkmate with (\S+)!/g,'فوّتّ كش مات بنقلة $1!'],[/You missed a chance to win a (\w+): (\S+)\./g,'فوّتّ فرصة لأخذ $1: $2.'],
+[/Your (\w+) on ([a-h][1-8]) can now be captured\./g,'يمكن الآن أخذ $1 عندك على $2.'],[/The engine prefers (\S+): /g,'المحرك يفضّل $1: '],
+[/Look for a move that (.*)\./g,'ابحث عن نقلة $1.'],[/Look at your (\w+) on ([a-h][1-8])\. Where can it do the most good\?/g,'انظر إلى $1 عندك على $2. أين يفيد أكثر؟'],
+[/Find the best move for/g,'ابحث عن أفضل نقلة لـ'],[/(\d+) games\./g,'$1 جيم.']];
+const D=[['A great piece sacrifice that still works out.','تضحية رائعة بقطعة وتنجح في النهاية.'],['Hard to find: the other moves are much worse.','صعب إيجادها: باقي النقلات أسوأ بكثير.'],
+["The engine's top choice.",'اختيار المحرك الأول.'],['Almost as good as the best move.','تكاد تكون بجودة أفضل نقلة.'],['A solid move.','نقلة سليمة.'],['Known opening theory.','نظرية افتتاحية معروفة.'],
+['The only legal move.','النقلة القانونية الوحيدة.'],['Slightly weakens your position.','تضعف موقفك قليلاً.'],['This gives away a lot.','هذه النقلة تخسّرك الكثير.'],['You missed a big chance.','فوّتّ فرصة كبيرة.'],['A serious error.','خطأ فادح.'],
+['Better was:','الأفضل كان:'],['(blue arrow)','(السهم الأزرق)'],['Lets the opponent force a mate','تسمح للخصم بإجبارك على كش مات'],
+['Brilliant','رائعة'],['Great move','نقلة عظيمة'],['Best move','أفضل نقلة'],['Excellent','ممتازة'],['Inaccuracy','عدم دقة'],['Mistake','غلطة'],['Blunder','خطأ فادح'],['Forced','إجبارية'],['Book moves','نقلات الكتاب'],['Book','كتاب'],['Good','جيدة'],['Miss','فرصة ضائعة'],
+['Checkmate!','كش مات!'],['Castling: protects your king and brings the rook into play','التبييت: يحمي ملكك ويُدخل القلعة في اللعب'],['Promotes the pawn to a queen','يرقّي البيدق إلى وزير'],
+['Captures the','يأخذ'],['(the square is attacked, so it is likely a trade)','(المربع مهاجَم، فغالباً تبادل)'],['and nothing can recapture','ولا يمكن استرجاعه'],['Gives check and forces a reply','يعطي كش ويفرض ردّاً'],
+['Saves your','ينقذ'],['from an attack','من هجوم'],['Develops a piece toward the center','يطوّر قطعة نحو المركز'],['Fights for the center','ينافس على المركز'],['Improves your piece and prepares a stronger plan','يحسّن قطعتك ويمهّد لخطة أقوى'],
+['Tip: early queen moves can be chased away. Develop knights and bishops first.','نصيحة: الوزير الذي يخرج مبكراً يمكن مطاردته. طوّر الأحصنة والأفيال أولاً.'],
+['Tip: you moved the same piece twice in the opening. Try developing a new piece.','نصيحة: حرّكت نفس القطعة مرتين في الافتتاحية. جرّب تطوير قطعة جديدة.'],['Tip: castle soon to tuck your king away safely.','نصيحة: بيّت قريباً لتأمين الملك.'],
+['Look for a way to checkmate!','ابحث عن طريقة لكش مات!'],['Think about the safety of your king.','فكّر في أمان ملكك.'],['Tap Coach again for the next hint.','اضغط Coach مرة أخرى للتلميح التالي.'],['Tap Coach again for the move.','اضغط Coach مرة أخرى لترى النقلة.'],
+['White to move','الدور على الأبيض'],['Black to move','الدور على الأسود'],['Draw (stalemate)','تعادل (بات)'],['Check!','كش!'],['wins','يفوز'],['Computer is thinking...','الكمبيوتر يفكّر...'],
+['New game','لعبة جديدة'],['Resign','استسلام'],['Undo','تراجع'],['Flip','اقلب'],['Coach','المدرب'],['Summary','الملخص'],['Games','الجيمات'],['Analyze','حلّل'],['Settings','الإعدادات'],['Load PGN','حمّل PGN'],['Copy','انسخ'],
+['Mistakes','الأخطاء'],['Openings','الافتتاحيات'],['Stats','الإحصائيات'],['Puzzles','ألغاز'],['Train','تدريب'],['Hint','تلميح'],['Show solution','أظهر الحل'],['Show answer','أظهر الإجابة'],['Next puzzle','لغز تالٍ'],['New puzzle','لغز جديد'],['Next','التالي'],['Start','ابدأ'],
+['All ratings','كل المستويات'],['Easy (up to 1200)','سهل (حتى 1200)'],['Medium (1200-1600)','متوسط (1200-1600)'],['Hard (1600-2000)','صعب (1600-2000)'],['Expert (2000+)','خبير (2000+)'],
+['Using 1 built-in sample puzzle.','يستخدم لغزاً تجريبياً واحداً مدمجاً.'],['Load more: choose','لتحميل المزيد اختر'],['Puzzle solved!','تم حل اللغز!'],['Correct. Keep going…','صح. كمّل…'],['Not the move. Try again.','ليست النقلة. حاول مرة أخرى.'],
+['Opponent is moving…','الخصم يلعب…'],['Your move.','دورك.'],['Move the piece on','حرّك القطعة على'],['Solution:','الحل:'],['Correct:','صح:'],['Not the best move. Try again.','ليست أفضل نقلة. حاول مرة أخرى.'],
+['The best move was','أفضل نقلة كانت'],['Tap a piece, then its target square.','اضغط قطعة ثم المربع المطلوب.'],['Not a book move here.','ليست نقلة من الكتاب هنا.'],['Line complete','انتهى الخط'],['Another line','خط آخر'],
+['I play White','ألعب بالأبيض'],['I play Black','ألعب بالأسود'],['Your move','دورك'],['Book moves exist here: find one.','توجد نقلات من الكتاب هنا: ابحث عن واحدة.'],['No saved mistakes yet.','لا توجد أخطاء محفوظة بعد.'],
+['Nothing due now.','لا شيء مستحق الآن.'],['Import','استيراد'],['Imported','تم استيراد'],['new games','جيم جديد'],['Opening','الافتتاحية'],['Score','النتيجة'],['White','الأبيض'],['Black','الأسود']];
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/'/g,"['’]");
+D.sort((a,b)=>b[0].length-a[0].length);
+const DR=D.map(([e,a])=>{let x=esc(e);const c=e[0];if(/[A-Za-z]/.test(c))x='['+c.toUpperCase()+c.toLowerCase()+']'+x.slice(1);return[new RegExp('(?<![A-Za-z])'+x+'(?![A-Za-z\'’])','g'),a]});
+const PR=new RegExp('(?<![A-Za-z\'’])(pawn|knight|bishop|rook|queen|king)(?![A-Za-z\'’])','g');
+const tr=s=>{for(const[r,a]of RU)s=s.replace(r,a);for(const[r,a]of DR)s=s.replace(r,a);return s.replace(PR,m=>PN[m])};
+let LG='en';try{LG=localStorage.getItem('chessLang')||'en'}catch(e){}
+const O=new WeakMap();
+function fix(n){const p=n.parentNode;if(!p||/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName))return;const rec=O.get(n);
+ if(LG==='ar'){if(rec&&n.data===rec.t)return;const t=tr(n.data);if(t!==n.data){O.set(n,{o:n.data,t});n.data=t}}else if(rec&&n.data===rec.t){n.data=rec.o;O.delete(n)}}
+function walk(r){if(r.nodeType===3)return fix(r);if(r.nodeType!==1)return;const w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT),L=[];let n;while(n=w.nextNode())L.push(n);L.forEach(fix)}
+let Q=new Set(),raf=0;const flush=()=>{raf=0;const q=[...Q];Q=new Set();q.forEach(walk)};
+new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')Q.add(m.target);else m.addedNodes.forEach(n=>Q.add(n))}if(!raf)raf=requestAnimationFrame(flush)}).observe(document.body,{childList:true,subtree:true,characterData:true});
+const css=document.createElement('style');css.textContent='#trp #bdw{direction:ltr}';document.head.appendChild(css);
+function set(l){LG=l;try{localStorage.setItem('chessLang',l)}catch(e){}document.querySelectorAll('#hn,#st,#trp').forEach(e=>e.dir=l==='ar'?'rtl':'ltr');walk(document.body)}
+const tb=Array.from(document.querySelectorAll('button')).find(b=>/Train/.test(b.textContent));
+if(tb){const s=document.createElement('select');s.innerHTML='<option value="en">🌐 Explanations: English</option><option value="ar">🌐 لغة الشرح: العربية</option>';s.value=LG;s.onchange=()=>set(s.value);tb.parentNode.appendChild(s)}
+window.LANGSET=set;set(LG);
+})();
+</script>
 </body></html>
