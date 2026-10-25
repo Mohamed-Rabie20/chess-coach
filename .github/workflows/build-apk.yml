@@ -1,6 +1,14 @@
 name: Build APK
 on:
   workflow_dispatch:
+    inputs:
+      engine:
+        description: "Stockfish 19 version (lite = small and fast, full = strongest but ~94MB)"
+        type: choice
+        default: lite
+        options:
+          - lite
+          - full
   push:
 jobs:
   build:
@@ -23,9 +31,26 @@ jobs:
           for f in *.mp3; do if [ -f "$f" ]; then cp "$f" www/sounds/; fi; done
           curl -fL -o www/stockfish.js https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js
           ls -la www
-      - name: Fast engine (Stockfish WASM, optional)
+      - name: Stockfish 19 (WASM, single-thread)
+        continue-on-error: true
+        env:
+          ENGINE_CHOICE: ${{ github.event.inputs.engine }}
+        run: |
+          B=https://github.com/nmrugg/stockfish.js/releases/download/v19.0.1
+          if [ "$ENGINE_CHOICE" = "full" ]; then N=stockfish-19-single; L="Stockfish 19 (WASM, NNUE, full)"; else N=stockfish-19-lite-single; L="Stockfish 19 (WASM, NNUE, lite)"; fi
+          echo "Selected: $N"
+          if curl -fL --retry 3 -o www/engine/$N.js $B/$N.js && curl -fL --retry 3 -o www/engine/$N.wasm $B/$N.wasm; then
+            printf 'window.SFNEW={file:"engine/%s.js",name:"%s"};\n' "$N" "$L" > www/engine/config.js
+            ls -la www/engine
+            echo "USING ENGINE: $L"
+          else
+            rm -f www/engine/$N.js www/engine/$N.wasm
+            echo "Stockfish 19 download failed - trying the npm package instead"
+          fi
+      - name: Fallback engine from npm (only if Stockfish 19 download failed)
         continue-on-error: true
         run: |
+          if [ -f www/engine/config.js ]; then echo "Stockfish 19 already installed"; exit 0; fi
           mkdir -p /tmp/sf && cd /tmp/sf
           npm init -y >/dev/null 2>&1
           npm install stockfish --no-audit --no-fund
