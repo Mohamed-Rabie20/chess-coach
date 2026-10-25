@@ -26,6 +26,7 @@ jobs:
         run: |
           mkdir -p www/engine
           cp index.html www/index.html
+          if [ -f slice.csv ]; then cp slice.csv www/slice.csv; fi
           mkdir -p www/sounds
           if [ -d sounds ]; then cp -r sounds/. www/sounds/; fi
           for f in *.mp3; do if [ -f "$f" ]; then cp "$f" www/sounds/; fi; done
