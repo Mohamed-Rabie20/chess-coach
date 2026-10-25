@@ -368,7 +368,7 @@ function pgn(){const sn=sans(),r=END?(END.startsWith('Draw')?'1/2-1/2':END.start
  return '[Event "Chess Coach game"]\n[Date "'+new Date().toISOString().slice(0,10).replace(/-/g,'.')+'"]\n[White "'+nm('w')+'"]\n[Black "'+nm('b')+'"]\n[Result "'+r+'"]\n'+(tc[0]?'[TimeControl "'+tc[0]+(tc[1]?'+'+tc[1]:'')+'"]\n':'')+'\n'+sn.map((x,i)=>(i%2?'':(i>>1)+1+'. ')+x).join(' ')+' '+r}
 function togglePGN(){const x=$('px'),on=x.style.display==='block';x.style.display=$('pb2').style.display=on?'none':'block';if(!on){x.value=pgn()+'\n\nFEN: '+fen(S,(ML.length>>1)+1);x.select()}}
 function copyPGN(){const x=$('px');x.select();try{navigator.clipboard.writeText(x.value)}catch(e){try{document.execCommand('copy')}catch(e2){}}$('hn').textContent='Copied to clipboard.'}
-function loadPGN(){const x=$('px').value.replace(/\{[^}]*\}|\([^)]*\)|\[[^\]]*\]|;[^\n]*|FEN:.*$/gm,' ').replace(/\d+\.(\.\.)?/g,' ').replace(/1-0|0-1|1\/2-1\/2|\*/g,' '),tk=x.split(/\s+/).filter(Boolean);
+function loadPGN(){let raw=$('px').value;{const f=raw.search(/\[Event\s/);if(f>=0){const n=raw.indexOf('[Event ',f+7);if(n>0)raw=raw.slice(0,n)}}const x=raw.replace(/\$\d+|\be\.p\./g,' ').replace(/\{[^}]*\}|\([^)]*\)|\[[^\]]*\]|;[^\n]*|FEN:.*$/gm,' ').replace(/\d+\.(\.\.)?/g,' ').replace(/1-0|0-1|1\/2-1\/2|\*/g,' '),tk=x.split(/\s+/).filter(Boolean);
  if(!tk.length){$('hn').textContent='Paste a PGN first.';return}
  let s=init();const Hn=[],Mn=[];
  for(let i=0;i<tk.length;i++){const w=tk[i].replace(/[+#!?]/g,'').replace(/0/g,'O'),m=legal(s).find(q=>san(s,q).replace(/[+#]/g,'')===w);
@@ -477,7 +477,7 @@ async function coachHint(){if(over||PRM())return;if(vi>=0){vi=-1;upd()}const key
  else{hint=m;$('hn').innerHTML='🎓 <b>Hint 3 of 3</b><br><b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+' ('+san(S,m)+')</b><ul>'+w.map(y=>'<li>'+y+'</li>').join('')+'</ul>'}
  R()}
 /* bots: each Elo plays differently (soft-max over move scores for weaker bots, Stockfish skill for stronger ones) */
-async function pick(){const e=bot().e;PSC=null;if(!SFok&&e>=1000&&ML.length<14){const bk=bookMove(S,true);if(bk&&Math.random()<.9)return bk}
+async function pick(){const e=bot().e;PSC=null;if(!SFok&&ML.length<14){const bk=bookMove(S,true);if(bk&&Math.random()<.9)return bk}
  const soft=(L,T)=>{if(!L.length)return null;const cl=e<800?600:e<1200?1000:3000,mx=Math.min(cl,Math.max(...L.map(x=>x.v))),w=L.map(x=>Math.exp((Math.max(-cl,Math.min(cl,x.v))-mx)/T));let r=Math.random()*w.reduce((p,q)=>p+q,0);for(let i=0;i<L.length;i++){r-=w[i];if(r<=0)return L[i].m}return L[0].m};
  if(e<1400)return soft(await scoreAllA(S,e<700?1:2),Math.max(14,(1500-e)/5));
  const sk=Math.max(0,Math.min(20,Math.round((e-1300)/85))),tm=Math.min(2500,Math.round(120+(e-1300)*1.4));
@@ -618,7 +618,7 @@ OP.push(...[
 'd2d4 d7d5 c1f4|London System',
 'c2c4 e7e5 b1c3|English: Reversed Sicilian',
 'g1f3 d7d5 c2c4|Réti: Queen’s Gambit Reversed'].map(x=>x.split('|')));
-{const _p=pick;pick=async function(){try{const e=bot().e;if(e>=1000&&ML.length<12){const ch=ML.length<8?.92:.6;if(Math.random()<ch){const bk=bookMove(S,true);if(bk){PSC=null;return bk}}}}catch(x){}return _p()}}
+{const _p=pick;pick=async function(){try{const e=bot().e;if(ML.length<12){const ch=ML.length<8?.92:.6;if(Math.random()<ch){const bk=bookMove(S,true);if(bk){PSC=null;return bk}}}}catch(x){}return _p()}}
 </script>
 <script>
 /* custom sound files: mp3 files next to index.html (copied into the app by the build); missing files fall back to the built-in synth. win/lose/draw all play end.mp3 (or stay silent if it is missing) */
