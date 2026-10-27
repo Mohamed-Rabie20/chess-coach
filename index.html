@@ -418,7 +418,7 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  const wd=Math.max(0,W(r.sc)-W(scA));
  let sac=false;if(pc!=='p'&&pc!=='k'){const la=lowAtt(n.b,m.t,op);if(att(n.b,m.t,op))sac=(att(n.b,m.t,pr.t)?Math.max(0,V[pc]-la):V[pc])-cv>=200}
  if(!sac&&pc!=='p'&&pc!=='k'){try{if(V[pc]>=300&&att(n.b,m.t,op)){const l2=lowAtt(n.b,m.t,op);if(l2>=50&&l2<=100&&V[pc]-l2-cv>=100)sac=true}
-  if(!sac){const was=new Set(hangP(pr,pr.t).map(h=>h.i));for(const h of hangP(n,pr.t)){if(h.l==='p'||h.i===m.t||(was.has(h.i)&&(inChk(n)||pr.b[m.t])))continue;const net=att(n.b,h.i,pr.t)?V[h.l]-h.la:V[h.l];if(net>=300){sac=true;break}}}}catch(e){}}
+  if(!sac){const was=new Set(hangP(pr,pr.t).map(h=>h.i));for(const h of hangP(n,pr.t)){if(h.l==='p'||h.i===m.t)continue;const net=att(n.b,h.i,pr.t)?V[h.l]-h.la:V[h.l];if(was.has(h.i)){if(inChk(pr)||inChk(n)||pr.b[m.t]||net<500)continue}else if(net<300)continue;sac=true;break}}}catch(e){}}
  let sacL=null;if(loss<=15&&!bk&&nl>1&&!sac&&window.SACLINE&&Math.abs(r.sc)<800){try{sacL=await window.SACLINE(pr,m)}catch(e){}}
  let mg=0;if(loss<=15&&!bk&&nl>1&&!sac&&!(sacL&&sacL.sac)&&Math.abs(r.sc)<700){const L=(await scoreAllA(pr,2)).sort((a,b)=>b.v-a.v);mg=L[0].v-L[1].v}
  /* data for calibrating Great: how much worse is the best OTHER move (Stockfish, searchmoves)? logged only, not used yet */
@@ -427,7 +427,7 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  if(nl===1)k='forced';
  else if(bk&&!big)k='book';
  else if(loss<=15&&!big&&(sac||(sacL&&sacL.sac))&&(r.sc<700||sac)&&scA>-100)k='brilliant';
- else if(loss<=15&&!big&&same&&mg>=300&&Math.abs(r.sc)<500)k='great';
+ else if(loss<=15&&!big&&same&&(gap?(!pr.b[m.t]&&gap.gw>=7.5&&scA>-150&&scA<680):(mg>=300&&Math.abs(r.sc)<500)))k='great';
  else if(same||wd<=.1)k='best';
  else if(wd<=2&&!big)k='excellent';else if(wd<=5&&!big)k='good';
  else if(wd>=10&&(r.sc>90000||(bc>=300&&!att(apply(pr,bm).b,bm.t,op)))&&!(pi>0&&RV[pi-1]&&RV[pi-1].dbg&&RV[pi-1].dbg.wd<6))k='miss';
@@ -5173,8 +5173,8 @@ function renderReport(){
   sn=sans();
  /* key moments: biggest drops and the best finds */
  const km=[];RV.forEach((x,i)=>{if(!x||!H[i])return;const sg=H[i].t==='w'?1:-1,loss=x.bs!=null&&EV[i]!=null?x.bs-sg*EV[i]:0;km.push({i,x,loss})});
- const bad=km.filter(o=>o.loss>=100&&['inacc','mistake','miss','blunder'].includes(o.x.k)).sort((a,b)=>b.loss-a.loss).slice(0,4),good=km.filter(o=>['brilliant','great'].includes(o.x.k)).slice(0,3),
-  chip=(o,c)=>'<button onclick="go('+(o.i+1)+')" style="border-color:'+RTG[o.x.k][2]+'">'+((o.i>>1)+1)+(o.i%2?'…':'.')+' '+sn[o.i]+' '+RTG[o.x.k][0]+(c?' −'+(o.loss/100).toFixed(1):'')+'</button>',
+ const bad=km.filter(o=>o.loss>=100&&['inacc','mistake','miss','blunder'].includes(o.x.k)).sort((a,b)=>Math.min(b.loss,1500)-Math.min(a.loss,1500)).slice(0,4),good=km.filter(o=>['brilliant','great'].includes(o.x.k)).slice(0,3),
+  chip=(o,c)=>'<button onclick="go('+(o.i+1)+')" style="border-color:'+RTG[o.x.k][2]+'">'+((o.i>>1)+1)+(o.i%2?'…':'.')+' '+sn[o.i]+' '+RTG[o.x.k][0]+(c?(o.loss>5000?' −#':' −'+(o.loss/100).toFixed(1)):'')+'</button>',
   kmh=has?'<div class="rx"><b>🔑 '+L('Key moments','اللحظات الحاسمة')+'</b>'+(bad.length||good.length?'<div class="rk">'+bad.map(o=>chip(o,1)).join('')+good.map(o=>chip(o,0)).join('')+'</div>':'<div class="mu">'+L('No big swings in this game.','مفيش تحولات كبيرة في الجيم ده.')+'</div>')+'</div>':'',
   pts=EV.map((q,i)=>q==null?null:[i,q]).filter(Boolean),X=i=>(i/Math.max(n-1,1)*300).toFixed(1),Y=q=>(35-31*Math.tanh(q/500)).toFixed(1);
  let g='';
