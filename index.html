@@ -86,11 +86,11 @@ button.p{background:linear-gradient(180deg,#46c987,#2f9a63);border-color:#2a8657
 <div id="pcol"><div class="bt"><button class="p" onclick="doHint()">💡 Best move</button><button class="p" onclick="coachHint()">🎓 Coach</button><button onclick="undo()">↩ Undo</button><button onclick="flipB()">🔄 Flip</button><button onclick="newG()">New game</button><button onclick="resign()">🏳 Resign</button><button onclick="offerDraw()">½ Draw</button></div>
 <div class="bt"><button onclick="go(0)">⏮</button><button onclick="nav(-1)">◀</button><button onclick="nav(1)">▶</button><button onclick="go(1e9)">⏭</button><button onclick="showSum()">📊 Summary</button><button onclick="showArch()">📚 Games</button><button onclick="analyzeAll()">🔍 Analyze</button><button onclick="CH=!CH;this.textContent=CH?'🎓 Tips: ON':'🎓 Tips: OFF'">🎓 Tips: ON</button><button onclick="togglePGN()">📋 PGN/FEN</button><button id="vb" onclick="cycVol(this)">🔊</button></div>
 <div id="hn">Think about your move first, then tap “Best move” and compare.</div>
-<details id="set"><summary>⚙ Settings</summary><div class="bt" style="margin-top:0"><select id="vs" onchange="setCfg()"><option value="0">Play both sides</option><option value="1">vs Computer</option></select><select id="lv" onchange="setCfg()"><option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option><option value="4">Expert</option></select><select id="me" onchange="setCfg()"><option value="w">I play White</option><option value="b">I play Black</option></select><select id="tc" onchange="setCfg()"><option value="0">No clock</option><option value="1">1 min</option><option value="2">3 min</option><option value="3">5 min</option><option value="4">10 min</option><option value="5">15 | 10</option></select><select id="th" onchange="setTh(this.value)"><option value="green">Green board</option><option value="brown">Brown board</option><option value="blue">Blue board</option><option value="gray">Gray board</option></select><select id="aq" onchange="setAQ(this.value)"><option value="0">Analysis: Fast</option><option value="1">Analysis: Balanced</option><option value="2">Analysis: Deep</option></select><select id="al" onchange="setAL(this.value)"><option value="0">Level: Auto</option><option value="800">Level: 800</option><option value="1200">Level: 1200</option><option value="1600">Level: 1600</option><option value="2000">Level: 2000</option><option value="2500">Level: 2500+</option></select></div><div id="en" class="mu" style="margin:0 0 8px">Engine: loading Stockfish…</div>
+<details id="set"><summary>⚙ Settings</summary><div class="bt" style="margin-top:0"><select id="vs" onchange="setCfg()"><option value="0">Play both sides</option><option value="1">vs Computer</option></select><select id="lv" onchange="setCfg()"><option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option><option value="4">Expert</option></select><select id="me" onchange="setCfg()"><option value="w">I play White</option><option value="b">I play Black</option></select><select id="tc" onchange="setCfg()"><option value="0">No clock</option><option value="1">1 min</option><option value="2">3 min</option><option value="3">5 min</option><option value="4">10 min</option><option value="5">15 | 10</option></select><select id="th" onchange="setTh(this.value)"><option value="green">Green board</option><option value="brown">Brown board</option><option value="blue">Blue board</option><option value="gray">Gray board</option></select><select id="aq" onchange="setAQ(this.value)"><option value="0">Analysis: Fast</option><option value="1">Analysis: Balanced</option><option value="2">Analysis: Deep</option><option value="3">Analysis: Maximum (slow)</option></select><select id="al" onchange="setAL(this.value)"><option value="0">Level: Auto</option><option value="800">Level: 800</option><option value="1200">Level: 1200</option><option value="1600">Level: 1600</option><option value="2000">Level: 2000</option><option value="2500">Level: 2500+</option></select></div><div id="en" class="mu" style="margin:0 0 8px">Engine: loading Stockfish…</div>
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button id="ib" style="display:none" onclick="doInstall()">⬇ Install app</button><span id="ih" class="mu" style="display:none;margin:0">To install: tap Share → “Add to Home Screen”.</span></div></details>
 
 <textarea id="px" rows="6" placeholder="Paste a PGN here, then press Load PGN" style="display:none;width:100%;box-sizing:border-box;margin-top:8px;border-radius:10px;padding:8px;background:var(--card);color:var(--tx);border:1px solid var(--mu);font:12px monospace"></textarea>
-<div id="pb2" class="bt" style="display:none"><button onclick="copyPGN()">📄 Copy</button><button onclick="annPGN()">🧠 Annotated</button><button onclick="dlPGN()">⬇ Download</button><button onclick="loadPGN()">📥 Load PGN</button></div>
+<div id="pb2" class="bt" style="display:none"><button onclick="copyPGN()">📄 Copy</button><button onclick="annPGN()">🧠 Annotated</button><button onclick="logPGN()">🧪 Analysis log</button><button onclick="dlPGN()">⬇ Download</button><button onclick="loadPGN()">📥 Load PGN</button></div>
 <div id="ml"></div>
 <div class="mu">Games save automatically on this device. Every move you play is rated. Tap a move in the list (or use ◀ ▶ / arrow keys) to review it.</div>
 </div></div>
@@ -99,7 +99,7 @@ const $=id=>document.getElementById(id),up=x=>x[0].toUpperCase()+x.slice(1);
 var AL=0,PGNELO=0,PGNEL={w:0,b:0};try{AL=+localStorage.getItem('chessAL')||0}catch(e){}
 function alK(){const r=AL||PGNELO||(cfg.vs?(RT+bot().e)/2:1300);return .00368208*Math.max(.55,Math.min(1,.5+(r-600)/3000))}
 function setAL(v){AL=+v;try{localStorage.setItem('chessAL',v)}catch(e){}if(RV.some(Boolean)&&!AZ&&ML.length)analyzeAll()}
-let ANIM=null,NOAN=0,WASMOK=false,AQ=1;const AQP=[[12,450,.6],[15,1000,1],[19,2200,2]];try{const q=localStorage.getItem('chessAQ');if(q!==null&&AQP[+q])AQ=+q}catch(e){}
+let ANIM=null,NOAN=0,WASMOK=false,AQ=1;const AQP=[[12,450,.6],[15,1000,1],[19,2200,2],[24,6000,3.5]];try{const q=localStorage.getItem('chessAQ');if(q!==null&&AQP[+q])AQ=+q}catch(e){}
 function setAQ(v){AQ=+v;try{localStorage.setItem('chessAQ',v)}catch(e){}}
 const G={k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
 const NM={p:'pawn',n:'knight',b:'bishop',r:'rook',q:'queen',k:'king'};
@@ -160,7 +160,7 @@ function ev(s){const b=s.b,pf=[Array(8).fill(0),Array(8).fill(0)],bc=[0,0];let v
  if(bc[0]>1)v+=30;if(bc[1]>1)v-=30;
  return(s.t==='w'?v:-v)+8}
 const TT=new Map(),HI=new Int32Array(4096);let DL=0,AB=false,nodes=0;
-const key=s=>s.b.join('')+s.t+s.c.K+s.c.Q+s.c.k+s.c.q+s.ep;
+const key=s=>s.b.map(x=>x||'.').join('')+s.t+s.c.K+s.c.Q+s.c.k+s.c.q+s.ep;
 function order(s,ms,tm){return ms.map(m=>({m,k:(tm&&m.f===tm.f&&m.t===tm.t?1e6:0)+(s.b[m.t]?V[s.b[m.t].toLowerCase()]*10-V[s.b[m.f].toLowerCase()]+1000:HI[m.f*64+m.t])+(m.pr?800:0)})).sort((a,b)=>b.k-a.k).map(x=>x.m)}
 function qs(s,a,b,q){const ck=inChk(s),w=s.t==='w',x=w?'b':'w';let ms=gen(s),n=0;
  if(!ck){const st=ev(s);if(st>=b||q>=6)return st;if(st>a)a=st;ms=ms.filter(m=>s.b[m.t]||m.pr||(m.t===s.ep&&s.b[m.f].toLowerCase()==='p'))}
@@ -247,9 +247,9 @@ async function initSF(){const en=$('en');try{
  catch(e){SF=null;en.textContent='Engine: built-in (Stockfish can only load when you open the downloaded file with internet)'}}
 function fen(s,fm){let f='';for(let r=0;r<8;r++){let e=0;for(let c=0;c<8;c++){const p=s.b[r*8+c];if(!p)e++;else{if(e){f+=e;e=0}f+=p}}if(e)f+=e;if(r<7)f+='/'}
  return f+' '+s.t+' '+((s.c.K?'K':'')+(s.c.Q?'Q':'')+(s.c.k?'k':'')+(s.c.q?'q':'')||'-')+' '+(s.ep>=0?sqn(s.ep):'-')+' '+(s.hm||0)+' '+(fm||1)}
-function sfGo(s,T,skill,only,dc){return new Promise(res=>{let sc=0,d=0;SFcb=l=>{
- if(l.startsWith('info')&&l.includes(' score ')&&!l.includes('bound')){const mm=l.match(/depth ([0-9]+).* score (cp|mate) (-?[0-9]+)/);if(mm){d=+mm[1];const n=+mm[3];sc=mm[2]==='cp'?n:(n>0?1:-1)*(99999-Math.abs(n))}}
- else if(l.startsWith('bestmove')){SFcb=null;const u=l.split(' ')[1],ms=legal(s),m=ms.find(q=>sqn(q.f)+sqn(q.t)===u.slice(0,4));res({m:m?(u[4]?{...m,pr:u[4]}:m):ms[0],sc,d:Math.max(d,1)})}};
+function sfGo(s,T,skill,only,dc){return new Promise(res=>{let sc=0,d=0,pv='';SFcb=l=>{
+ if(l.startsWith('info')&&l.includes(' score ')&&!l.includes('bound')){const mm=l.match(/depth ([0-9]+).* score (cp|mate) (-?[0-9]+)/);if(mm){d=+mm[1];const n=+mm[3];sc=mm[2]==='cp'?n:(n>0?1:-1)*(99999-Math.abs(n));const pm=l.match(/ pv (.+)$/);if(pm)pv=pm[1].trim()}}
+ else if(l.startsWith('bestmove')){SFcb=null;const u=l.split(' ')[1],ms=legal(s),m=ms.find(q=>sqn(q.f)+sqn(q.t)===u.slice(0,4));res({m:m?(u[4]?{...m,pr:u[4]}:m):ms[0],sc,d:Math.max(d,1),pv})}};
  SF.postMessage('setoption name Skill Level value '+skill);SF.postMessage('position fen '+fen(s));SF.postMessage('go '+(WASMOK&&dc?'depth '+dc+' ':'')+'movetime '+T+(only?' searchmoves '+only:''))})}
 function bookMove(s,rnd){const i=s===S?ML.length:H.indexOf(s);if(i<0)return null;const pre=ML.slice(0,i),c=[];for(const[k]of OP){const q=k.split(' ');if(q.length>i&&pre.every((x,j)=>q[j]===x)&&!c.includes(q[i]))c.push(q[i])}return c.length?fromTok(s,rnd?c[Math.random()*c.length|0]:c[0]):null}
 async function eng0(s,T,maxD,skill=20,only){let dc=0;if(maxD===6){const q=AQP[AQ]||AQP[1];if(WASMOK){dc=q[0];T=q[1]}else T=Math.round(T*q[2])}if(!SFok&&maxD>=10&&!only){const bk=bookMove(s);if(bk)return{m:bk,sc:20,d:1}}if(SFok&&legal(s).length){const r=await Promise.race([sfGo(s,T,skill,only,dc),new Promise(r=>setTimeout(()=>r(null),T+8000))]);if(r){SFfail=0;return r}SFcb=null;try{SF.postMessage('stop');SFpend++}catch(_){}if(++SFfail>=3){SFok=false;$('en').textContent='Engine: built-in (Stockfish stopped responding)'}}return thinkA(s,T,maxD)}
@@ -293,8 +293,10 @@ function endGame(x){END=x;snd(endK());save();upd();setTimeout(showSum,0)}
 function resign(){if(over||END||!ML.length)return;if(!confirm('Resign this game?'))return;const s=cfg.vs?cfg.me:S.t;endGame((s==='w'?'White':'Black')+' resigned — '+(s==='w'?'Black':'White')+' wins')}
 async function offerDraw(){if(over||END||ML.length<2)return;if(!cfg.vs){if(confirm('Both players agree to a draw?'))endGame('Draw by agreement');return}
  $('hn').textContent='Draw offered…';const r=await eng(S,500,6),cs=S.t===cfg.me?-r.sc:r.sc;if(cs<=40)endGame('Draw by agreement');else $('hn').textContent='🤖 The computer declined your draw offer.'}
-function drawWhy(){const s=S;if((s.hm||0)>=100)return 'Draw (50-move rule)';
- const k=key(s);let n=1;for(const h of H)if(key(h)===k)n++;if(n>=3)return 'Draw (threefold repetition)';
+/* threefold repetition, chess.com style: same pieces on the same squares, same side to move, same castling rights, same en passant possibility; the 3 occurrences do not have to be consecutive. The game ends automatically on the 3rd. An en passant square only counts when a pawn can really capture there. */
+function repKey(s){let b='';for(let i=0;i<64;i++)b+=s.b[i]||'.';let ep=-1;if(s.ep>=0&&legal(s).some(m=>m.t===s.ep&&s.b[m.f]&&s.b[m.f].toLowerCase()==='p'&&(m.f&7)!==(m.t&7)))ep=s.ep;return b+'|'+s.t+s.c.K+s.c.Q+s.c.k+s.c.q+ep}
+function drawWhy(){window.REP3=0;const s=S;if((s.hm||0)>=100)return 'Draw (50-move rule)';
+ const k=repKey(s);let n=1;for(const h of H)if(repKey(h)===k)n++;window.REP3=n;if(n>=3)return 'Draw (threefold repetition)';
  const pc=s.b.filter(x=>x&&x.toLowerCase()!=='k');
  if(!pc.length||(pc.length===1&&'nb'.includes(pc[0].toLowerCase())))return 'Draw (insufficient material)';
  if(pc.length===2&&pc.every(x=>x.toLowerCase()==='b')&&(pc[0]<'a')!==(pc[1]<'a')){const c=s.b.map((x,i)=>x&&x.toLowerCase()==='b'?((i>>3)+(i&7))%2:-1).filter(x=>x>=0);if(c[0]===c[1])return 'Draw (insufficient material)'}return ''}
@@ -405,12 +407,13 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  let acc;const W=WP;acc=Math.max(0,Math.min(100,103.1668*Math.exp(-0.04354*Math.max(0,W(r.sc)-W(scA)))-3.1669));
  if(!legal(n).length&&inChk(n)){loss=0;scA=r.sc}
  const wd=Math.max(0,W(r.sc)-W(scA));
- let sac=false;if(pc!=='p'&&pc!=='k'){const la=lowAtt(n.b,m.t,op);if(la<999)sac=(att(n.b,m.t,pr.t)?Math.max(0,V[pc]-la):V[pc])-cv>=200}
- let mg=0;if(loss<=15&&!bk&&nl>1&&!sac&&Math.abs(r.sc)<700){const L=(await scoreAllA(pr,2)).sort((a,b)=>b.v-a.v);mg=L[0].v-L[1].v}
+ let sac=false;if(pc!=='p'&&pc!=='k'){const la=lowAtt(n.b,m.t,op);if(att(n.b,m.t,op))sac=(att(n.b,m.t,pr.t)?Math.max(0,V[pc]-la):V[pc])-cv>=200}
+ let sacL=null;if(loss<=15&&!bk&&nl>1&&!sac&&window.SACLINE&&Math.abs(r.sc)<800){try{sacL=await window.SACLINE(pr,m)}catch(e){}}
+ let mg=0;if(loss<=15&&!bk&&nl>1&&!sac&&!(sacL&&sacL.sac)&&Math.abs(r.sc)<700){const L=(await scoreAllA(pr,2)).sort((a,b)=>b.v-a.v);mg=L[0].v-L[1].v}
  const bc=pr.b[bm.t]?V[pr.b[bm.t].toLowerCase()]:0,same=bm.f===m.f&&bm.t===m.t&&(m.pr||'q')===(bm.pr||'q'),big=false;let k;
  if(nl===1)k='forced';
  else if(bk&&wd<=5&&!big)k='book';
- else if(loss<=15&&!big&&sac&&r.sc<500&&scA>-100)k='brilliant';
+ else if(loss<=15&&!big&&(sac||(sacL&&sacL.sac))&&r.sc<700&&scA>-100)k='brilliant';
  else if(loss<=15&&!big&&same&&mg>=300&&Math.abs(r.sc)<500)k='great';
  else if(same||wd<=.4)k='best';
  else if(wd<=2&&!big)k='excellent';else if(wd<=5&&!big)k='good';
@@ -424,7 +427,7 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  if(loss>=30)h+=`<div class="mu">${loss>5000?'Lets the opponent force a mate':'Cost: about '+(loss/100).toFixed(1)+' pawns (win chance -'+wd.toFixed(0)+'%)'}</div>`;
  if(CH&&!['best','excellent','book','great','brilliant','forced'].includes(k)){const ct=await coachNote(pr,m,bm,k,n,op,pi);if(ct)h+=ct}
  if(H[pi]!==pr)return;
- RV[pi]={s:pr.t,k,acc,sq:m.t,h,ba:bad?{f:bm.f,t:bm.t}:null,bs:r.sc,bm:tok(bm)};EV[pi]=(pr.t==='w'?1:-1)*scA;
+ RV[pi]={s:pr.t,k,acc,sq:m.t,h,ba:bad?{f:bm.f,t:bm.t}:null,bs:r.sc,bm:tok(bm),dbg:{sac:+!!sac,sl:sacL?+!!sacL.sac:null,dip:sacL?sacL.dip:null,mg,wd:+wd.toFixed(1),loss,rs:r.sc,sa:scA}};EV[pi]=(pr.t==='w'?1:-1)*scA;
  if(pi===ML.length-1)setBar(EV[pi]);
  if(vi<0){BD={sq:m.t,sym:t[0],col:t[2]};$('hn').innerHTML=h+(window.whyBtn?whyBtn(pi):'');R()}
  save();if(over)setTimeout(showSum,0)}
@@ -542,7 +545,7 @@ async function analyzeAll(){if(AZ||!ML.length)return;AZ=1;const n=ML.length,oq=A
   $('st').textContent='🔍 Deep analysis '+(i+1)+' / '+n;
   $('hn').innerHTML='<div class="gr"><h3>🔍 Analyzing game…</h3><div class="gbar"><i style="width:'+Math.round(i/n*100)+'%"></i></div><div class="mu">Move '+(i+1)+' of '+n+'</div></div>';
   await review(H[i],m,isBook(ML.slice(0,i+1)),i)}
-  if(WASMOK&&SFok&&H.length===n){const K=[];RV.forEach((x,i)=>{if(x&&['inacc','mistake','miss','blunder','brilliant','great'].includes(x.k))K.push(i)});K.length=Math.min(K.length,18);AQ=2;let j=0;for(const i of K){if(H.length!==n||!H[i])break;const m=fromTok(H[i],ML[i]);if(!m)break;$('st').textContent='Verifying key moves '+(++j)+' / '+K.length;$('hn').innerHTML='<div class="gr"><h3>Verifying key moves...</h3><div class="gbar"><i style="width:'+Math.round(j/K.length*100)+'%"></i></div><div class="mu">'+j+' of '+K.length+'</div></div>';await review(H[i],m,isBook(ML.slice(0,i+1)),i)}}
+  if(WASMOK&&SFok&&H.length===n){const K=[];RV.forEach((x,i)=>{if(x&&['inacc','mistake','miss','blunder','brilliant','great'].includes(x.k))K.push(i)});K.length=Math.min(K.length,18);AQ=Math.max(2,oq);let j=0;for(const i of K){if(H.length!==n||!H[i])break;const m=fromTok(H[i],ML[i]);if(!m)break;$('st').textContent='Verifying key moves '+(++j)+' / '+K.length;$('hn').innerHTML='<div class="gr"><h3>Verifying key moves...</h3><div class="gbar"><i style="width:'+Math.round(j/K.length*100)+'%"></i></div><div class="mu">'+j+' of '+K.length+'</div></div>';await review(H[i],m,isBook(ML.slice(0,i+1)),i)}}
    if(H.length===n){recheck();RV.forEach(x=>x&&(x.dp=1))}}
  finally{AQ=oq;AZ=0;vi=-1;save()}
  if(H.length===n){lastBar();upd();showSum()}}
@@ -671,16 +674,16 @@ async function mMove(m){if(T.busy)return;const it=T.cur,s=T.s,t=tok(m);let ok=t=
  if(!ok&&t!==it.p&&typeof SFok!=='undefined'&&SFok){say('Checking…');try{const r=await eng(s,800,6),v=await eng(s,800,6,20,t);if(r.sc-v.sc<=30){ok=true;why2=' (the engine likes your move too)'}}catch(e){}}
  T.busy=false;T.sel=-1;
  if(ok){upMist(true);T.s=apply(s,m);redraw('✅ Correct: <b>'+san(s,m)+'</b>'+why2+'.<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}
- else{T.tries++;if(t===it.p)say('❌ That is the move you played in your game. Try again.');else say('❌ Not the best move. Try again.');if(T.tries>=2){upMist(false);redraw('The best move was <b>'+san(s,fromTok(s,it.b))+'</b>.<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}else R2()}}
-function skip(){const it=T.cur,s=parseFEN(it.f);upMist(false);T.s=s;redraw('The best move was <b>'+san(s,fromTok(s,it.b))+'</b>.<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}
+ else{T.tries++;if(t===it.p)say('❌ That is the move you played in your game. Try again.');else say('❌ Not the best move. Try again.');if(T.tries>=2){upMist(false);redraw('The best move was <b>'+san(s,fromTok(s,it.b))+'</b>.<div class="bt"><button onclick="TRN.mw()">💡 Why?</button><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}else R2()}}
+function skip(){const it=T.cur,s=parseFEN(it.f);upMist(false);T.s=s;redraw('The best move was <b>'+san(s,fromTok(s,it.b))+'</b>.<div class="bt"><button onclick="TRN.mw()">💡 Why?</button><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}
 function redraw(m){rb();say(m)}
 function R2(){rb()}
 /* ---- opening trainer ---- */
 function fams(){const c={};for(const[q,n]of bk()){const f=fam(n);c[f]=(c[f]||0)+1}return Object.entries(c).filter(x=>x[1]>=6).sort((a,b)=>b[1]-a[1]).slice(0,80)}
 function cands(){const i=T.pre.length,m=new Map();for(const[q,n]of bk()){if(!n.startsWith(T.fam)||q.length<=i||!T.pre.every((x,j)=>q[j]===x))continue;m.set(q[i],(m.get(q[i])||0)+1)}const mx=Math.max(0,...m.values());for(const[k,v]of m)if(v<mx*.03&&m.size>1)m.delete(k);return m}
-function tO(){const F=fams();draw('<div class="bt" style="margin:0"><select id="of">'+F.map(f=>'<option value="'+esc(f[0])+'"'+(f[0]===T.fam?' selected':'')+'>'+esc(f[0])+' ('+f[1]+')</option>').join('')+'</select><select id="os"><option value="w">I play White</option><option value="b"'+(T.user==='b'?' selected':'')+'>I play Black</option></select><button class="p" onclick="TRN.go()">Start</button><button onclick="TRN.ol()">Learn</button></div>'+(osDue().length?'<div class="bt">'+osDue().slice(0,4).map((x,i)=>'<button onclick="TRN.od('+i+')">Review: '+esc(x.fam)+' ('+(x.user==='w'?'W':'B')+')</button>').join('')+'</div>':'')+'<div class="mu" style="margin-top:6px"><b>Learn</b>: watch the main line step by step with the idea behind each move. <b>Start</b>: practise it, you must find the book moves and the computer replies from the same book.</div>'+(T.s?'<div id="bdw">'+board()+'</div><div id="tm"></div>':''))}
+function tO(){const F=fams();draw('<input id="osq" type="search" autocomplete="off" placeholder="🔍 Search an opening (e.g. najdorf, caro, london)" value="'+esc(T.sqv||'')+'" oninput="TRN.sq(this.value)" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;margin-bottom:6px"><div id="osr" class="bt" style="flex-wrap:wrap;margin:0 0 6px"></div><div class="bt" style="margin:0"><select id="of">'+(T.fam&&!F.some(f=>f[0]===T.fam)?'<option value="'+esc(T.fam)+'" selected>'+esc(T.fam)+'</option>':'')+F.map(f=>'<option value="'+esc(f[0])+'"'+(f[0]===T.fam?' selected':'')+'>'+esc(f[0])+' ('+f[1]+')</option>').join('')+'</select><select id="os"><option value="w">I play White</option><option value="b"'+(T.user==='b'?' selected':'')+'>I play Black</option></select><button class="p" onclick="TRN.go()">Start</button><button onclick="TRN.ol()">Learn</button></div>'+(osDue().length?'<div class="mu" style="margin-top:6px">📌 Your review list</div>'+osDue().slice(0,6).map((x,i)=>'<div class="bt"><button onclick="TRN.od('+i+')">Review: '+esc(x.fam)+' ('+(x.user==='w'?'W':'B')+')</button><button style="flex:0 0 46px" onclick="TRN.odx('+i+')">✕</button></div>').join('')+'<div class="bt"><button onclick="TRN.odc()">Clear list</button></div>':'')+'<div class="mu" style="margin-top:6px"><b>Learn</b>: watch the main line step by step with the idea behind each move. <b>Start</b>: practise it, you must find the book moves and the computer replies from the same book.</div>'+(T.s?'<div id="bdw">'+board()+'</div><div id="tm"></div>':''))}
 function oGo(){T.learn=0;T.arr=null;T.fam=root.querySelector('#of').value;T.user=root.querySelector('#os').value;T.s=init();T.pre=[];T.mis=0;T.sel=-1;tO();oStep()}
-function oStep(){const c=cands();if(!c.size){if(!T.learn)osRec();const full2=nameOf(T.pre),m=T.mis;say('🏁 Line complete'+(full2?': <b>'+esc(full2)+'</b>':'')+'. Mistakes: '+m+'.<div class="bt"><button class="p" onclick="TRN.go()">Another line</button></div>');return}
+function oStep(){const c=cands();if(!c.size){const full2=nameOf(T.pre),m=T.mis;say('🏁 Line complete'+(full2?': <b>'+esc(full2)+'</b>':'')+'. Mistakes: '+m+'.<div class="bt"><button class="p" onclick="TRN.go()">Another line</button><button onclick="TRN.oa()">➕ Add to review list</button></div>');return}
  if(T.s.t!==T.user){let tot=0;for(const v of c.values())tot+=v;let r=Math.random()*tot,pick=null;for(const[k,v]of c){r-=v;if(r<0){pick=k;break}}pick=pick||[...c.keys()][0];const m=fromTok(T.s,pick);T.pre.push(pick);setTimeout(()=>{T.s=apply(T.s,m);rb();oStep()},350);return}
  say('Your move ('+(T.user==='w'?'White':'Black')+'). Book moves exist here: find one.<div class="bt"><button onclick="TRN.oh()">Show book move</button></div>')}
 function rb(){const h=root.querySelector('#bdw');if(h)h.innerHTML=board()}
@@ -4865,11 +4868,23 @@ function dLive(){const s=dState();return s.last===dKey()||s.last===dYes()?s.st:0
 function dTxt(){const s=dState(),l=dLive();return '<br>🎯 Daily goal: <b>'+Math.min(s.n,DGOAL)+'/'+DGOAL+'</b>'+(s.n>=DGOAL?' ✅':'')+' · 🔥 '+l+' day'+(l===1?'':'s')+(s.best?' (best '+s.best+')':'')}
 async function zWhy(k){const W=window.WHYPZ,Q=window.WHYR,p=T.pz;if(!W||!Q||!p)return;
  try{
-  if(k==='x'){const w=T.zbad;if(!w)return;const sm=fromTok(w.s,T.mv[w.zi]);say('…');const h=await Q(w.s,w.m,'mistake',sm,null,0,{puz:1});if(T.pz!==p)return;say(h+ZB)}
+  if(k==='x'){const w=T.zbad;if(!w)return;const sm=fromTok(w.s,T.mv[w.zi]);say('…');const h=await Q(w.s,w.m,'mistake',sm,null,0,{puz:1,Lb:window.LINEFROMTOKS(w.s,T.mv.slice(w.zi))});if(T.pz!==p)return;say(h+ZB)}
   else if(k==='s'){say('…');const h=await W(T.z0,T.mv.slice(T.zi0));if(T.pz!==p)return;say(h+'<div class="bt"><button class="p" onclick="TRN.zn()">New puzzle</button></div>')}
   else{say('…');const h=await W(T.s,T.mv.slice(T.zi));if(T.pz!==p)return;say(h+'<div class="bt"><button onclick="TRN.za()">Play full solution</button><button class="p" onclick="TRN.zn()">New puzzle</button></div>')}
  }catch(e){say('Could not explain this one.')}}
-window.TRN={zw:zWhy,zb:()=>zGo(-1),zf:()=>zGo(1),pa:zAdd,pc:zClr,oq:()=>{if(!T.ln||T.fam!==root.querySelector('#of').value)oLearn();qGo()},od:osGo,zr:zRush,za:zAll,ol:oLearn,on:lNext,ob:lBack,oh:oHint,zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2};
+let ONM=null;
+function oNames(){if(ONM)return ONM;const c={};for(const e of bk()){const n=e[1];if(n)c[n]=(c[n]||0)+1}return ONM=Object.entries(c)}
+function oSearch(v){T.sqv=v;const box=root.querySelector('#osr');if(!box)return;const w=String(v).toLowerCase().split(/\s+/).filter(Boolean);
+ if(!w.length){box.innerHTML='';return}
+ const r=oNames().filter(([n])=>{const l=n.toLowerCase();return w.every(x=>l.includes(x))}).sort((a,b)=>b[1]-a[1]||a[0].length-b[0].length).slice(0,8);T.sr=r.map(x=>x[0]);
+ box.innerHTML=r.length?r.map((x,i)=>'<button onclick="TRN.sp('+i+')">'+esc(x[0])+' ('+x[1]+')</button>').join(''):'<div class="mu">No opening found.</div>'}
+function oPick(i){const n=T.sr&&T.sr[i];if(!n)return;const sel=root.querySelector('#of');if(!sel)return;let o=[...sel.options].find(x=>x.value===n);if(!o){o=document.createElement('option');o.value=n;o.textContent=n;sel.insertBefore(o,sel.firstChild)}sel.value=n;T.fam=n;const b=root.querySelector('#osr');if(b)b.innerHTML='<div class="mu">✔ '+esc(n)+' — tap Start or Learn.</div>'}
+function oAdd(){osRec();say('✔ Added to your review list.<div class="bt"><button class="p" onclick="TRN.go()">Another line</button></div>')}
+function osDel(i){const x=osDue()[i];if(!x)return;const O=LS('chessOS',{});delete O[x.fam+'|'+x.user];SV('chessOS',O);tO()}
+function osClr(){SV('chessOS',{});tO()}
+async function mWhy(){const it=T.cur;if(!it||!window.WHYR)return;const s=parseFEN(it.f),b=fromTok(s,it.b),pm=it.p?fromTok(s,it.p):null;say('…');
+ try{const h=pm&&it.p!==it.b?await window.WHYR(s,pm,'mistake',b,null,0,{}):await window.WHYPZ(s,[it.b]);say(h+'<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}catch(e){say('Could not explain this one.')}}
+window.TRN={mw:mWhy,sq:oSearch,sp:oPick,oa:oAdd,odx:osDel,odc:osClr,zw:zWhy,zb:()=>zGo(-1),zf:()=>zGo(1),pa:zAdd,pc:zClr,oq:()=>{if(!T.ln||T.fam!==root.querySelector('#of').value)oLearn();qGo()},od:osGo,zr:zRush,za:zAll,ol:oLearn,on:lNext,ob:lBack,oh:oHint,zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2};
 })();
 </script>
 <script>
@@ -4959,71 +4974,83 @@ function strat(pr,m,n,pk,me,ix){
  }
  if(ix!=null&&ML[ix]){
   const mine=ML.slice(0,ix+1).filter((x,i)=>i%2===ix%2),prev=mine[mine.length-2];
-  if(pk==='q'&&ix<8)R.push(L('Bringing the queen out early lets the opponent chase it with developing moves.','إخراج الوزير بدري بيخلّي الخصم يطارده وهو بيطوّر.'));
+  if(pk==='q'&&ix<8&&!capOf(pr,m))R.push(L('Bringing the queen out early lets the opponent chase it with developing moves.','إخراج الوزير بدري بيخلّي الخصم يطارده وهو بيطوّر.'));
   else if(pk!=='p'&&pk!=='k'&&ix<14&&prev&&prev.slice(2,4)===sqn(m.f)&&!capOf(pr,m))R.push(L('You moved the same piece twice in the opening instead of developing a new one.','حرّكت نفس القطعة مرتين في الافتتاحية بدل ما تطوّر قطعة جديدة.'));
   if((pk==='n'||pk==='b')&&rowOf(m.t)===back&&rowOf(m.f)!==back&&ix>=8)R.push(L('It pulls a developed piece back to the first rank, so it loses activity.','بترجّع قطعة متطورة للصف الأول فبتفقد نشاطها.'));
   if(ix>=14&&pk!=='k'&&kingSq(n,me)===(me==='w'?60:4)&&r1>0)R.push(L('Your king is still in the centre; castling soon would make it safer.','ملكك لسه في النص، والتبييت قريب هيأمّنه.'));
  }
  return R.slice(0,3)}
 
+/* ---- line-based explanation: follow the engine's best continuation instead of judging one move in isolation ---- */
+const uciMv=(s,u)=>{const m=legal(s).find(q=>sqn(q.f)+sqn(q.t)===u.slice(0,4));return m?(u[4]?{...m,pr:u[4]}:m):null};
+const matBal=(s,side)=>{let v=0;for(const p of s.b)if(p){const l=p.toLowerCase();if(l!=='k')v+=((p<'a')===(side==='w')?1:-1)*V[l]}return v};
+function mkLine(s0,moves){let s=s0;const sans=[],caps=[],tos=[],bals=[],b0=matBal(s0,s0.t);for(const q of moves){const c=capOf(s,q);sans.push(san(s,q));caps.push(c?c.toLowerCase():'');tos.push(q.t);s=apply(s,q);bals.push(matBal(s,s0.t)-b0)}
+ return{sans,caps,tos,bals,net:bals.length?bals[bals.length-1]:0,mate:!legal(s).length&&inChk(s),n:moves.length}}
+/* a sacrifice = the line drops at least 2 pawns of material and does not win it straight back */
+window.SACLINE=async(pr,m)=>{const me=pr.t,op=me==='w'?'b':'w',n=apply(pr,m);if(!legal(n).length)return null;if(!hang(n,me).length&&!att(n.b,m.t,op))return null;
+ let Ln=null;try{Ln=await lineFrom(pr,m,4)}catch(e){return null}const b=Ln.bals,dip=Math.min(...b.slice(0,2));return{sac:dip<=-200&&(b.length<3||b[2]<=-150),dip,end:Ln.net,line:Ln.sans.join(' ')}};
+window.LINEFROMTOKS=(pos,toks)=>{const mv=[];let s=pos;for(const t of toks){const q=fromTok(s,t);if(!q)break;mv.push(q);s=apply(s,q)}return mkLine(pos,mv)};
+async function lineFrom(s0,first,maxPl){
+ const mv=[first];let s=apply(s0,first),lc=!!capOf(s0,first),guard=0;
+ while(guard++<4&&legal(s).length&&(mv.length<maxPl||(lc&&mv.length<maxPl+3))){
+  let r=null;try{r=await engC(s,700,12)}catch(e){}
+  if(!r||!r.m)break;
+  const take=r.pv?r.pv.split(' '):[sqn(r.m.f)+sqn(r.m.t)+(r.m.pr||'')];let any=false;
+  for(const u of take){if(mv.length>=maxPl+3||(mv.length>=maxPl&&!lc))break;const q=uciMv(s,u);if(!q)break;lc=!!capOf(s,q);mv.push(q);s=apply(s,q);any=true}
+  if(!any)break}
+ return mkLine(s0,mv)}
+const lt=l=>B(l.sans.slice(0,6).join(' ')+(l.sans.length>6?' …':'')),pw=v=>String(Math.round(Math.abs(v)/10)/10);
+
 async function report(pr,m,k,bm,bs,loss,opt){
- opt=opt||{};
+ opt=opt||{};const T0=Date.now();
  const me=pr.t,op=me==='w'?'b':'w',n=apply(pr,m),pk=pr.b[m.f].toLowerCase(),
   weak=['inacc','mistake','miss','blunder'].includes(k),
   same=!!bm&&bm.f===m.f&&bm.t===m.t&&(m.pr||'q')===(bm.pr||'q'),
-  P=[],G=[],M=[],W=[],hb=hang(pr,me),ha=hang(n,me),hbS=new Set(hb.map(x=>x.i)),
-  cc=capOf(pr,m),cv=cc?V[cc.toLowerCase()]:0;
- /* 1) what this move leaves hanging */
- if(!mate(pr,m)){
-  const mv=ha.find(x=>x.i===m.t);
-  if(mv&&!(cv&&cv>=V[pk]-30)){
-   const pro=att(n.b,m.t,me);
-   P.push(L('Your '+nm(pk)+' on '+B(sqn(m.t))+' can be captured — '+(pro?'it is protected, but the attacker ('+an(mv.la)+') is worth less.':'nothing protects it.'),
-            'ال'+nm(pk)+' بتاعك على '+B(sqn(m.t))+' ممكن يتاخد — '+(pro?'هو محمي بس اللي بيهاجمه ('+an(mv.la)+') أرخص منه.':'ومفيش حاجة بتحميه.')))}
-  for(const x of ha){if(x.i===m.t)continue;
-   P.push(hbS.has(x.i)
-    ?L('Your '+nm(x.l)+' on '+B(sqn(x.i))+' was already under attack and this move did not deal with it.','ال'+nm(x.l)+' بتاعك على '+B(sqn(x.i))+' كان متهاجَم أصلاً والنقلة دي ما حلّتش ده.')
-    :L('After this move your '+nm(x.l)+' on '+B(sqn(x.i))+' is attacked and not safe.','بعد النقلة دي بقى ال'+nm(x.l)+' بتاعك على '+B(sqn(x.i))+' متهاجَم ومش آمن.'))}
- }
- /* 2) the opponent's best answer */
- let rr=null;if(legal(n).length){try{rr=await engC(n,600,5)}catch(e){}}
- if(rr&&rr.m){const rm=rr.m,rn=apply(n,rm),cp=capOf(n,rm),s=san(n,rm);
-  if(!legal(rn).length&&inChk(rn))P.push(L('It allows '+B('checkmate')+' with '+B(s)+'.','النقلة دي بتسمح بـ'+B('كش مات')+' بنقلة '+B(s)+'.'));
-  else{
-   const gain=cp?V[cp.toLowerCase()]-(att(rn.b,rm.t,me)?V[n.b[rm.f].toLowerCase()]:0):0;
-   if(cp&&gain>=100)P.push(L('The opponent can reply '+B(s)+' and win your '+nm(cp)+'.','الخصم يقدر يرد '+B(s)+' ويكسب ال'+nm(cp)+' بتاعك.'));
-   else if(weak&&rr.sc>=150){
-    const nh=hang(rn,me).filter(y=>!ha.some(z=>z.i===y.i));
-    P.push(L('The opponent’s strongest reply is '+B(s)+(inChk(rn)?' (check)':'')+(nh.length?', threatening your '+nm(nh[0].l)+' on '+B(sqn(nh[0].i)):'')+'.',
-             'أقوى رد للخصم هو '+B(s)+(inChk(rn)?' (كش)':'')+(nh.length?' وبيهدد ال'+nm(nh[0].l)+' بتاعك على '+B(sqn(nh[0].i)):'')+'.'))}}}
- /* 3) positional reasons (only when the move was weak) */
- if(!opt.puz&&(weak||(k==='good'&&!same))){strat(pr,m,n,pk,me,opt.ix).forEach(x=>(weak?P:W).push(x))}
- /* 4) what you missed */
+  P=[],G=[],M=[],W=[],hb=hang(pr,me);
+ /* 1) follow the game forward from the played move */
+ let rr=null;if(!opt.Lm&&legal(n).length){try{rr=await engC(n,700,12)}catch(e){}}
+ let Lm=opt.Lm;if(!Lm){try{Lm=legal(n).length?await lineFrom(pr,m,6):mkLine(pr,[m])}catch(e){Lm=mkLine(pr,[m])}}
+ if(weak){
+  if(rr&&rr.sc>90000)P.push(L('It allows a forced checkmate (mate in '+Math.max(1,99999-rr.sc)+' for the opponent).','النقلة دي بتسمح بكش مات إجباري (مات في '+Math.max(1,99999-rr.sc)+' للخصم).'));
+  else if(Lm.net<=-100){
+   let j=-1;for(let q=1;q<Lm.caps.length;q+=2)if(Lm.caps[q]){j=q;break}
+   P.push(L('The likely continuation is '+lt(Lm)+', and you end up about '+pw(Lm.net)+' pawns down'+(j>=0?' (you lose your '+nm(Lm.caps[j])+' on '+B(sqn(Lm.tos[j]))+')':'')+'.',
+            'التكملة المتوقعة '+lt(Lm)+' وبتنتهي وإنت ناقص حوالي '+pw(Lm.net)+' بيدق'+(j>=0?' (بتخسر ال'+nm(Lm.caps[j])+' على '+B(sqn(Lm.tos[j]))+')':'')+'.'))}
+  else if(Lm.mate&&Lm.sans.length%2===0)P.push(L('The line '+lt(Lm)+' ends in checkmate against you.','الخط '+lt(Lm)+' بينتهي بكش مات ضدك.'))}
+ else{
+  if(Lm.mate&&Lm.sans.length%2===1)G.push(L('The line '+lt(Lm)+' ends in '+B('checkmate')+'.','الخط '+lt(Lm)+' بينتهي بـ'+B('كش مات')+'.'));
+  else if(Lm.net>=100)G.push(L('It wins material: '+lt(Lm)+' leaves you about '+pw(Lm.net)+' pawns up.','بتكسب مادة: '+lt(Lm)+' بتسيبك متقدم حوالي '+pw(Lm.net)+' بيدق.'));
+  else if(Lm.caps.some(Boolean)&&Lm.sans.length>1)G.push(L('Expected continuation: '+lt(Lm)+'. Material stays roughly equal.','التكملة المتوقعة: '+lt(Lm)+'. المادة بتفضل تقريباً متعادلة.'))}
+ /* 2) positional reasons (only when the move was a bit worse than the best one) */
+ if(!opt.puz&&(weak||(k==='good'&&!same))){strat(pr,m,apply(pr,m),pk,me,opt.ix).forEach(x=>(weak?P:W).push(x))}
+ /* 3) what you missed: follow the best move forward too */
  if(bm&&!same){
-  const bn=apply(pr,bm),bc=capOf(pr,bm),bsn=san(pr,bm);
+  const bsn=san(pr,bm);
   if(mate(pr,bm))M.push(L('You had '+B('checkmate')+' with '+B(bsn)+'.','كان عندك '+B('كش مات')+' بنقلة '+B(bsn)+'.'));
-  else if(bc&&V[bc.toLowerCase()]>=100)M.push(L((weak?'Better was ':'Slightly better was ')+B(bsn)+', winning a '+nm(bc)+(att(bn.b,bm.t,op)?' (they can recapture, so it is a trade)':'')+'.',
-                                                (weak?'الأفضل كانت ':'أحسن شوية كانت ')+B(bsn)+' وتكسب بيها '+nm(bc)+(att(bn.b,bm.t,op)?' (الخصم يقدر يسترجع فهي تبادل)':'')+'.'));
+  else if(bs!=null&&bs>90000)M.push(L('You had a forced checkmate here; '+B(bsn)+' started it.','كان عندك كش مات إجباري هنا، و'+B(bsn)+' كانت بدايته.'));
   else{
-   const hb2=hang(bn,me),sv=hb.filter(x=>{const q=x.i===bm.f?bm.t:x.i;return !hb2.some(y=>y.i===q)});
-   if(sv.length)M.push(L('Your '+nm(sv[0].l)+' on '+B(sqn(sv[0].i))+' was under attack — '+B(bsn)+' deals with it.','ال'+nm(sv[0].l)+' بتاعك على '+B(sqn(sv[0].i))+' كان متهاجَم — '+B(bsn)+' بتحل المشكلة.'));
-   else if(weak||k==='good'){const w0=why(pr,bm)[0];M.push(L('The engine prefers '+B(bsn)+': '+w0.charAt(0).toLowerCase()+w0.slice(1)+'.','المحرك بيفضّل '+B(bsn)+': '+w0.charAt(0).toLowerCase()+w0.slice(1)+'.'))}}
+   let Lb=opt.Lb;if(!Lb&&Date.now()-T0<3500){try{Lb=await lineFrom(pr,bm,6)}catch(e){Lb=null}}
+   if(Lb&&Lb.net>=100&&Lb.net-Lm.net>=100)M.push(L((weak?'Better was ':'Slightly better was ')+B(bsn)+'. Main line: '+lt(Lb)+' (wins about '+pw(Lb.net)+' pawns).',(weak?'الأفضل كانت ':'أحسن شوية كانت ')+B(bsn)+'. الخط الأساسي: '+lt(Lb)+' (بتكسب حوالي '+pw(Lb.net)+' بيدق).'));
+   else{
+    const bn=apply(pr,bm),hb2=hang(bn,me),sv=hb.filter(x=>{const q=x.i===bm.f?bm.t:x.i;return !hb2.some(y=>y.i===q)});
+    if(sv.length&&weak)M.push(L('Your '+nm(sv[0].l)+' on '+B(sqn(sv[0].i))+' was under attack — '+B(bsn)+' deals with it.','ال'+nm(sv[0].l)+' بتاعك على '+B(sqn(sv[0].i))+' كان متهاجَم — '+B(bsn)+' بتحل المشكلة.'));
+    else if(weak||k==='good'){const w0=why(pr,bm)[0];M.push(L('The engine prefers '+B(bsn)+': '+w0.charAt(0).toLowerCase()+w0.slice(1)+'.','المحرك بيفضّل '+B(bsn)+': '+w0.charAt(0).toLowerCase()+w0.slice(1)+'.'))}}}
  }
- /* 5) why a good move is good */
+ /* 4) why a good move is good */
  if(!weak){
-  why(pr,m).forEach(x=>G.push(x));
+  {const ws=why(pr,m),gen=/^Improves your piece/;(ws.length>1||G.length?ws.filter(x=>!gen.test(x)):ws).forEach(x=>G.push(x))}
   if(!mate(pr,m)){
    const ho=hang(n,op),hp=hang(pr,op),nw=ho.filter(y=>!hp.some(z=>z.i===y.i));
-   if(nw.length)G.push(L('It now threatens the opponent’s '+nm(nw[0].l)+' on '+B(sqn(nw[0].i))+'.','دلوقتي بتهدد ال'+nm(nw[0].l)+' بتاع الخصم على '+B(sqn(nw[0].i))+'.'));
-   if(!ha.length)G.push(L('All your pieces stay safe after it.','كل قطعك فضلت في أمان بعدها.'))}
+   if(nw.length)G.push(L('It now threatens the opponent’s '+nm(nw[0].l)+' on '+B(sqn(nw[0].i))+'.','دلوقتي بتهدد ال'+nm(nw[0].l)+' بتاع الخصم على '+B(sqn(nw[0].i))+'.'))}
   if(k==='brilliant')G.push(L('You give up material, but the engine shows the position is better afterwards.','بتضحّي بمادة بس المحرك بيوضّح إن موقفك أحسن بعدها.'));
   if(k==='great')G.push(L('It is the one move that keeps your position; most others are clearly worse.','دي النقلة الوحيدة اللي بتحافظ على موقفك، ومعظم غيرها أسوأ بوضوح.'));
   if(k==='book')G.push(L('It follows known opening theory, so it is a safe, well-tested choice.','بتتبع نظرية افتتاحية معروفة، يعني اختيار آمن ومجرَّب.'));
   if(k==='forced')G.push(L('It is the only legal move.','دي النقلة القانونية الوحيدة.'));
+  if(G.length>1){const gi=G.findIndex(x=>/^Improves your piece/.test(x));if(gi>=0)G.splice(gi,1)}
  }
  if(weak&&!P.length)P.push(opt.puz
   ?L('This move does not reach the key idea of the puzzle.','النقلة دي مش بتوصل لفكرة اللغز الأساسية.')
-  :L('Nothing is lost right away, but the position gets worse: the opponent gets an easier game and more options.','مفيش قطعة بتضيع فوراً بس موقفك بيسوء: الخصم بياخد لعب أسهل وخيارات أكتر.'));
+  :L('No piece is lost in the main line, but the evaluation drops: the opponent gets an easier game and more options.','مفيش قطعة بتضيع في الخط الأساسي بس التقييم بينزل: الخصم بياخد لعب أسهل وخيارات أكتر.'));
  let E='';
  if(bs!=null&&loss>=0&&(weak||loss>=10))E=L('Evaluation for you: ','التقييم لصالحك: ')+B(fmt(bs))+' → '+B(fmt(bs-loss));
  else if(loss>=30)E=L('Cost: about '+(loss/100).toFixed(1)+' pawns','الخسارة: حوالي '+(loss/100).toFixed(1)+' بيدق');
@@ -5032,16 +5059,11 @@ async function report(pr,m,k,bm,bs,loss,opt){
  return '<b>💡 '+title+'</b><ul style="list-style:none;padding:0;margin:8px 0">'+sec('❌',P)+sec('⚠️',W)+sec('✅',G)+sec('🎯',M)+sec('🎯',opt.extra||[])+(E?'<li style="margin:5px 0">📈 '+E+'</li>':'')+'</ul>'}
 window.WHYR=report;
 
+
 /* puzzle explanation: why the solution works */
 window.WHYPZ=async(pos,toks)=>{
  const m=fromTok(pos,toks[0]);if(!m)return'';
- const me=pos.t,md=s=>{let v=0;for(const p of s.b)if(p)v+=((p<'a')===(me==='w')?1:-1)*V[p.toLowerCase()];return v};
- let s=pos;const sn=[];
- for(const t of toks){const q=fromTok(s,t);if(!q)break;sn.push(san(s,q));s=apply(s,q)}
- const mt=!legal(s).length&&inChk(s),gain=md(s)-md(pos),ex=[L('The full line: '+B(sn.join(' ')),'الخط كامل: '+B(sn.join(' ')))];
- if(mt)ex.push(L('It ends in '+B('checkmate')+'.','وبينتهي بـ'+B('كش مات')+'.'));
- else if(gain>=100)ex.push(L('By the end you are up about '+Math.round(gain/100)+' pawns of material.','في الآخر بتكسب مادة حوالي '+Math.round(gain/100)+' بيدق.'));
- return report(pos,m,'best',m,null,0,{puz:1,title:L('Why this works','ليه النقلة دي شغالة'),extra:ex})};
+ return report(pos,m,'best',m,null,0,{puz:1,Lm:LINEFROMTOKS(pos,toks),title:L('Why this works','ليه النقلة دي شغالة')})};
 
 let PREV='',K=0;
 window.TW=null;
@@ -5076,7 +5098,77 @@ function saveAcc(){
   A=LS('chessAcc',[]),i=A.findIndex(x=>x.id===rec.id);
  if(i>=0){if(A[i].full&&!rec.full)return;rec.d=A[i].d;A[i]=rec}else A.push(rec);
  while(A.length>60)A.shift();SV('chessAcc',A)}
-{const s0=showSum;showSum=function(){try{saveAcc()}catch(e){}return s0.apply(this,arguments)}}
+/* phases by lichess's Divider rules (opening / middlegame / endgame, without the mixedness term) */
+function division(){
+ const P=[...H,S];let mid=-1,end=-1;
+ for(let i=0;i<P.length;i++){
+  const b=P[i].b;let mm=0,wb=0,bb=0;
+  for(let q=0;q<64;q++){const p=b[q];if(!p)continue;const l=p.toLowerCase();if(l!=='p'&&l!=='k')mm++;if(q>=56&&p<'a')wb++;if(q<8&&p>='a')bb++}
+  if(mid<0&&(mm<=10||wb<4||bb<4))mid=i;
+  if(mid>=0&&end<0&&mm<=6){end=i;break}}
+ return{mid,end}}
+phases=function(s){const o={o:[],t:[],s:[],e:[]},dv=division();
+ RV.forEach((x,i)=>{if(!x||x.s!==s||x.k==='forced'||!H[i])return;const p=H[i];let ph;
+  if(dv.mid<0||i<dv.mid)ph='o';else if(dv.end>=0&&i>=dv.end)ph='e';
+  else{const sh=q=>{if(!q)return false;if(p.b[q.t]||q.pr)return true;const pc=p.b[q.f];if(pc&&pc.toLowerCase()==='p'&&(q.f&7)!==(q.t&7))return true;return inChk(apply(p,q))};
+   ph=sh(fromTok(p,ML[i]))||sh(x.bm?fromTok(p,x.bm):null)?'t':'s'}
+  o[ph].push(x.acc)});
+ const f=a=>a.length?a.reduce((p,q)=>p+q,0)/a.length:null;return{o:f(o.o),t:f(o.t),s:f(o.s),e:f(o.e)}};
+
+/* ---- new Game Review layout: ring gauges, stacked quality bars, radar of the four areas, key moments ---- */
+{const st=document.createElement('style');st.textContent=`
+.rp{display:flex;flex-direction:column;gap:12px}
+.rp h3{margin:0;font-size:18px}
+.rp .rg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rp .rq{border-radius:16px;padding:10px 8px 12px;text-align:center;background:rgba(128,128,128,.12);border:1px solid var(--ln,#2a3550)}
+.rp .rq .rn{font-size:13px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;justify-content:center;gap:6px}
+.rp .rd{width:11px;height:11px;border-radius:50%;display:inline-block;border:1px solid #888}
+.rp .rt{font-size:12px;opacity:.9}
+.rp .rbar{display:flex;height:12px;border-radius:7px;overflow:hidden;background:rgba(128,128,128,.25);margin-top:6px}
+.rp .rcs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;justify-content:center}
+.rp .rc{font-size:12px;font-weight:800;padding:1px 8px;border-radius:999px;color:#10151f}
+.rp .rx{border-radius:16px;padding:10px;background:rgba(128,128,128,.10);border:1px solid var(--ln,#2a3550)}
+.rp .rx>b{display:block;margin-bottom:6px}
+.rp .rk{display:flex;flex-wrap:wrap;gap:6px}
+.rp .rk button{flex:0 1 auto;font-size:12px;padding:6px 10px}
+.rp table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+.rp td{padding:2px 4px;text-align:center}.rp td:first-child{text-align:start}
+`;document.head.appendChild(st)}
+const ACC=a=>a>=90?'#2f9e5b':a>=75?'#8cbf3f':a>=60?'#e0a82e':'#ca3431';
+const ring=a=>{const c=2*Math.PI*30,v=a==null?0:Math.max(0,Math.min(100,a));return'<svg viewBox="0 0 80 80" width="88" height="88"><circle cx="40" cy="40" r="30" fill="none" stroke="rgba(128,128,128,.3)" stroke-width="8"/><circle cx="40" cy="40" r="30" fill="none" stroke="'+(a==null?'#888':ACC(a))+'" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+(c*v/100).toFixed(1)+' '+c.toFixed(1)+'" transform="rotate(-90 40 40)"/><text x="40" y="46" text-anchor="middle" font-size="19" font-weight="800" fill="currentColor">'+(a==null?'–':a.toFixed(0))+'</text></svg>'};
+const est=(s,a)=>{if(a==null)return null;const p=(GD&&PGNEL[s])?PGNEL[s]:(cfg.vs&&!GD?(s===cfg.me?RT:bot().e):null);const v=p!=null?Math.max(p-500,Math.min(p+500,p+11*(a-78))):1300+.5*(gRate(a)-1300);return Math.round(Math.max(100,Math.min(3200,v))/50)*50};
+const pname=s=>cfg.vs&&!GD?(s===cfg.me?L('You','إنت'):bot().n):(s==='w'?L('White','الأبيض'):L('Black','الأسود'))+(GD&&PGNEL[s]?' ('+PGNEL[s]+')':'');
+const radar=(pw,pb)=>{const cx=80,cy=80,R=58,ang={o:-90,t:0,s:90,e:180},pt=(k,v)=>{const a=ang[k]*Math.PI/180,r=R*Math.max(0,Math.min(100,v||0))/100;return(cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1)},ks=['o','t','s','e'],
+  grid=[25,50,75,100].map(v=>'<polygon points="'+ks.map(k=>pt(k,v)).join(' ')+'" fill="none" stroke="rgba(128,128,128,.35)" stroke-width=".6"/>').join(''),
+  lab={o:[80,14,L('Opening','الافتتاحية')],t:[146,84,L('Tactics','التكتيك')],s:[80,156,L('Strategy','الاستراتيجية')],e:[14,84,L('Endgame','النهاية')]};
+ return'<svg viewBox="-16 0 192 170" style="width:100%;max-width:320px;display:block;margin:0 auto">'+grid+ks.map(k=>'<line x1="'+cx+'" y1="'+cy+'" x2="'+pt(k,100).split(',')[0]+'" y2="'+pt(k,100).split(',')[1]+'" stroke="rgba(128,128,128,.35)" stroke-width=".6"/>').join('')
+  +'<polygon points="'+ks.map(k=>pt(k,pw[k])).join(' ')+'" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.6"/><polygon points="'+ks.map(k=>pt(k,pb[k])).join(' ')+'" fill="rgba(91,140,255,.28)" stroke="#5b8cff" stroke-width="1.6"/>'
+  +ks.map(k=>'<text x="'+lab[k][0]+'" y="'+lab[k][1]+'" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".85">'+lab[k][2]+'</text>').join('')+'</svg>'};
+function renderReport(){
+ const n=ML.length,has=RV.some(Boolean),A=s=>RV.some(x=>x&&x.s===s)?accOf(s):null,rated=s=>RV.filter(x=>x&&x.s===s),
+  pl=s=>{const a=A(s),r=rated(s),tot=r.length||1,e=est(s,a);
+   const segs=RORD.map(k=>{const c=r.filter(x=>x.k===k).length;return c?'<div style="width:'+(100*c/tot).toFixed(1)+'%;background:'+RTG[k][2]+'"></div>':''}).join(''),
+    chips=RORD.map(k=>{const c=r.filter(x=>x.k===k).length;return c?'<span class="rc" style="background:'+RTG[k][2]+'" title="'+RTG[k][1]+'">'+RTG[k][0]+' '+c+'</span>':''}).join('');
+   return'<div class="rq"><div class="rn"><span class="rd" style="background:'+(s==='w'?'#f1f1f1':'#222')+'"></span>'+pname(s)+'</div>'+ring(a)+'<div class="rt">'+(e?L('Performance','الأداء')+' ≈ <b>'+e+'</b>':L('Not analysed yet','لسه ما اتحللش'))+'</div>'+(r.length?'<div class="rbar">'+segs+'</div><div class="rcs">'+chips+'</div>':'')+'</div>'},
+  P={w:phases('w'),b:phases('b')},nm4={o:L('Opening','الافتتاحية'),t:L('Tactics','التكتيك'),s:L('Strategy','الاستراتيجية'),e:L('Endgame','النهاية')},
+  v=x=>x==null?'–':Math.round(x),
+  rad=has?'<div class="rx"><b>'+L('Strengths by phase','القوة حسب مرحلة اللعبة')+'</b>'+radar(P.w,P.b)+'<table><tr><td></td><td><span class="rd" style="background:#f1f1f1"></span> '+pname('w').split(' (')[0]+'</td><td><span class="rd" style="background:#5b8cff"></span> '+pname('b').split(' (')[0]+'</td></tr>'+['o','t','s','e'].map(k=>'<tr><td>'+nm4[k]+'</td><td>'+v(P.w[k])+'</td><td>'+v(P.b[k])+'</td></tr>').join('')+'</table></div>':'',
+  sn=sans();
+ /* key moments: biggest drops and the best finds */
+ const km=[];RV.forEach((x,i)=>{if(!x||!H[i])return;const sg=H[i].t==='w'?1:-1,loss=x.bs!=null&&EV[i]!=null?x.bs-sg*EV[i]:0;km.push({i,x,loss})});
+ const bad=km.filter(o=>o.loss>=100&&['inacc','mistake','miss','blunder'].includes(o.x.k)).sort((a,b)=>b.loss-a.loss).slice(0,4),good=km.filter(o=>['brilliant','great'].includes(o.x.k)).slice(0,3),
+  chip=(o,c)=>'<button onclick="go('+(o.i+1)+')" style="border-color:'+RTG[o.x.k][2]+'">'+((o.i>>1)+1)+(o.i%2?'…':'.')+' '+sn[o.i]+' '+RTG[o.x.k][0]+(c?' −'+(o.loss/100).toFixed(1):'')+'</button>',
+  kmh=has?'<div class="rx"><b>🔑 '+L('Key moments','اللحظات الحاسمة')+'</b>'+(bad.length||good.length?'<div class="rk">'+bad.map(o=>chip(o,1)).join('')+good.map(o=>chip(o,0)).join('')+'</div>':'<div class="mu">'+L('No big swings in this game.','مفيش تحولات كبيرة في الجيم ده.')+'</div>')+'</div>':'',
+  pts=EV.map((q,i)=>q==null?null:[i,q]).filter(Boolean),X=i=>(i/Math.max(n-1,1)*300).toFixed(1),Y=q=>(35-31*Math.tanh(q/500)).toFixed(1);
+ let g='';
+ if(pts.length>1)g='<div class="rx"><b>📉 '+L('Evaluation','التقييم')+'</b><svg viewBox="0 0 300 70" onclick="gSv(event)" style="width:100%;height:70px;border-radius:10px;background:rgba(128,128,128,.18);cursor:pointer"><defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b8cff" stop-opacity=".55"/><stop offset="1" stop-color="#5b8cff" stop-opacity=".05"/></linearGradient></defs><polygon fill="url(#eg)" points="'+X(pts[0][0])+',70 '+pts.map(([i,q])=>X(i)+','+Y(q)).join(' ')+' '+X(pts[pts.length-1][0])+',70"/><polyline fill="none" stroke="#5b8cff" stroke-width="1.6" points="'+pts.map(([i,q])=>X(i)+','+Y(q)).join(' ')+'"/><line x1="0" y1="35" x2="300" y2="35" stroke="#888" stroke-width=".5" stroke-dasharray="3 3"/>'
+  +RV.map((x,i)=>x&&EV[i]!=null&&['mistake','blunder','miss','brilliant','great'].includes(x.k)?'<circle cx="'+X(i)+'" cy="'+Y(EV[i])+'" r="2.8" fill="'+RTG[x.k][2]+'" stroke="#fff" stroke-width=".6"/>':'').join('')+'</svg><div class="mu" style="font-size:11px;margin-top:3px">'+L('Tap the graph to jump to a move.','اضغط على الرسم عشان تروح لنقلة.')+'</div></div>';
+ $('hn').innerHTML='<div class="rp"><h3>📋 '+L('Game report','تقرير الجيم')+'</h3>'+(RDm?'<div class="mu">'+RDm+'</div>':'')+(n?'<div class="rg">'+pl('w')+pl('b')+'</div>'+kmh+rad+g
+  +'<button class="gbtn" onclick="startRev()">'+(isDeep()?'▶ '+L('Start review','ابدأ المراجعة'):'🔍 '+L('Analyze & start review','حلّل وابدأ المراجعة'))+'</button>'
+  +(has&&!isDeep()?'<div class="mu" style="font-size:12px">'+L('Live ratings are quick. Analyze runs a deeper engine check on every move for both sides.','التقييم اللحظي سريع. التحليل بيعمل فحص أعمق لكل نقلة للاعبين.')+'</div>':'')
+  +'<div class="mu" style="font-size:11px">'+L('Performance and phase scores are estimates from the analysed moves, not official ratings.','الأداء ودرجات المراحل تقديرات من النقلات المحلَّلة، مش تقييمات رسمية.')+'</div>':'<div class="mu">'+L('No moves yet.','مفيش نقلات لسه.')+'</div>')+'</div>'}
+
+showSum=function(){try{saveAcc()}catch(e){}renderReport()};
 window.TRENDHTML=()=>{
  const A=LS('chessAcc',[]);
  if(!A.length)return'<div class="mu" style="margin-bottom:10px">'+L('Your accuracy trend will appear here after you finish or analyse a game (vs the computer or a loaded game).','اتجاه دقتك هيظهر هنا بعد ما تخلّص أو تحلّل جيم (ضد الكمبيوتر أو جيم محمّل).')+'</div>';
@@ -5091,6 +5183,31 @@ window.TRENDHTML=()=>{
  return'<div style="margin-bottom:12px"><b>📈 '+L('Accuracy trend','اتجاه الدقة')+'</b><div class="mu" style="margin:3px 0 6px">'+A.length+' '+L('analysed games','جيم محلَّل')+' · '+L('last 5 average','متوسط آخر 5')+' <b>'+avg(last).toFixed(1)+'%</b>'+d+'</div>'+svg
   +'<div style="margin-top:10px"><b>'+L('Strengths and weaknesses','نقاط القوة والضعف')+'</b>'+bars+(weak?'<div class="mu">⚠ '+L('Your weakest area is','أضعف منطقة عندك هي')+' <b>'+names[weak.k]+'</b>.</div>':'')+'</div></div>'};
 /* annotated PGN (eval comments + move marks, readable by lichess / chess.com analysis boards) */
+/* ---- result card when a game ends ---- */
+function showResult(){
+ try{const old=document.getElementById('rsm');if(old)old.remove()}catch(e){}
+ const lose=END?(/resigned|lost/.test(END)?END.startsWith('White')?'w':'b':null):(!LC.length&&inChk(S)?S.t:null),why=$('st').textContent||END||'';
+ let title,emoji,col;
+ if(cfg.vs){const res=lose?(lose===cfg.me?0:1):.5;title=res===1?L('You win!','كسبت!'):res===0?L('You lose','خسرت'):L('Draw','تعادل');emoji=res===1?'🏆':res===0?'😔':'🤝';col=res===1?'#7fb83b':res===0?'#ca3431':'#9aa0a6'}
+ else{title=lose?(lose==='w'?L('Black wins','الأسود كسب'):L('White wins','الأبيض كسب')):L('Draw','تعادل');emoji=lose?'🏆':'🤝';col=lose?'#7fb83b':'#9aa0a6'}
+ const d=document.createElement('div');d.id='rsm';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+ d.onclick=e=>{if(e.target===d)d.remove()};
+ d.innerHTML='<div style="width:min(88vw,340px);background:#262421;color:#fff;border-radius:18px;padding:22px 18px 18px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5);position:relative">'
+  +'<button onclick="document.getElementById(\'rsm\').remove()" style="position:absolute;top:8px;inset-inline-end:10px;background:none;border:0;color:#bbb;font-size:22px;width:auto;padding:4px 8px">✕</button>'
+  +'<div style="font-size:46px;line-height:1">'+emoji+'</div><div style="font-size:28px;font-weight:800;margin:8px 0 2px;color:'+col+'">'+title+'</div>'
+  +'<div style="opacity:.85;font-size:14px;margin-bottom:6px">'+why+'</div>'+(cfg.vs&&RDm?'<div style="font-size:13px;opacity:.8;margin-bottom:8px">'+RDm+'</div>':'')
+  +'<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px"><button onclick="document.getElementById(\'rsm\').remove();newG()" style="background:#7fb83b;color:#fff;font-weight:800;font-size:18px;padding:12px;border-radius:12px;border:0">'+L('New game','جيم جديد')+'</button>'
+  +'<button onclick="document.getElementById(\'rsm\').remove();try{$(\'hn\').scrollIntoView({behavior:\'smooth\'})}catch(e){}" style="padding:10px;border-radius:12px">📋 '+L('Game report','تقرير الجيم')+'</button></div></div>';
+ document.body.appendChild(d)}
+{const fg0=finishGame;finishGame=function(){const first=!GD&&ML.length>0;fg0();if(first)setTimeout(showResult,450)}}
+/* ---- analysis log: lets you send me the engine's numbers for every move, to tune the ratings ---- */
+window.logPGN=function(){
+ const sn=sans(),mv=[];
+ for(let i=0;i<ML.length;i++){const x=RV[i];let bs=null;if(x&&x.bm&&H[i]){const b=fromTok(H[i],x.bm);bs=b?san(H[i],b):null}
+  mv.push({ply:i+1,san:sn[i],side:i%2?'b':'w',class:x?x.k:null,acc:x&&x.acc!=null?Math.round(x.acc*10)/10:null,best:bs,evalAfterWhiteCp:EV[i]!=null?Math.round(EV[i]):null,bestEvalMoverCp:x&&x.bs!=null?Math.round(x.bs):null,dbg:x&&x.dbg||null})}
+ const o={app:'Chess Coach',engine:(window.SFNEW&&SFNEW.name)||(SFok?'Stockfish (default)':'built-in'),quality:AQ,level:AL||PGNELO||'auto',pgn:pgn().replace(/\n+/g,' '),moves:mv};
+ $('px').style.display='block';$('pb2').style.display='flex';$('px').value=JSON.stringify(o);$('px').select();
+ $('hn').textContent=L('Analysis log ready: tap Copy and send it to me, with the labels chess.com gave for the same game.','سجل التحليل جاهز: اضغط Copy وابعتهولي مع التصنيفات اللي chess.com عملها لنفس الجيم.')};
 const NAG={brilliant:'$3',great:'$1',inacc:'$6',mistake:'$2',miss:'$2',blunder:'$4'};
 window.annPGN=function(){
  const base=pgn(),res=base.trim().split(' ').pop(),hd=base.split('\n\n')[0]+(!cfg.vs&&(PGNEL.w||PGNEL.b)?'\n[WhiteElo "'+(PGNEL.w||'?')+'"]\n[BlackElo "'+(PGNEL.b||'?')+'"]':'')+'\n[Annotator "Chess Coach"]',sn=sans();let out='',prevC=false;
