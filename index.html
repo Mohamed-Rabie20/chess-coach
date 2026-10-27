@@ -410,16 +410,22 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  let sac=false;if(pc!=='p'&&pc!=='k'){const la=lowAtt(n.b,m.t,op);if(att(n.b,m.t,op))sac=(att(n.b,m.t,pr.t)?Math.max(0,V[pc]-la):V[pc])-cv>=200}
  let sacL=null;if(loss<=15&&!bk&&nl>1&&!sac&&window.SACLINE&&Math.abs(r.sc)<800){try{sacL=await window.SACLINE(pr,m)}catch(e){}}
  let mg=0;if(loss<=15&&!bk&&nl>1&&!sac&&!(sacL&&sacL.sac)&&Math.abs(r.sc)<700){const L=(await scoreAllA(pr,2)).sort((a,b)=>b.v-a.v);mg=L[0].v-L[1].v}
+ /* data for calibrating Great: how much worse is the best OTHER move (Stockfish, searchmoves)? logged only, not used yet */
+ let gap=null;if(SFok&&loss<=15&&!bk&&nl>1&&bm){try{const ex=legal(pr).filter(q=>!(q.f===bm.f&&q.t===bm.t&&(q.pr||'q')===(bm.pr||'q'))).map(q=>sqn(q.f)+sqn(q.t)+(q.pr||'')).join(' ');if(ex){const r2=await eng(pr,1000,6,20,ex);if(r2&&r2.sc!=null)gap={g:r.sc-r2.sc,gw:+(W(r.sc)-W(r2.sc)).toFixed(1)}}}catch(e){}}
  const bc=pr.b[bm.t]?V[pr.b[bm.t].toLowerCase()]:0,same=bm.f===m.f&&bm.t===m.t&&(m.pr||'q')===(bm.pr||'q'),big=false;let k;
  if(nl===1)k='forced';
  else if(bk&&wd<=5&&!big)k='book';
- else if(loss<=15&&!big&&(sac||(sacL&&sacL.sac))&&r.sc<700&&scA>-100)k='brilliant';
+ else if(loss<=15&&!big&&(sac||(sacL&&sacL.sac))&&(r.sc<700||sac)&&scA>-100)k='brilliant';
  else if(loss<=15&&!big&&same&&mg>=300&&Math.abs(r.sc)<500)k='great';
  else if(same||wd<=.4)k='best';
  else if(wd<=2&&!big)k='excellent';else if(wd<=5&&!big)k='good';
- else if(wd>=10&&(r.sc>90000||(bc>=300&&!att(apply(pr,bm).b,bm.t,op))))k='miss';
+ else if(wd>=10&&(r.sc>90000||(bc>=300&&!att(apply(pr,bm).b,bm.t,op)))&&!(pi>0&&RV[pi-1]&&RV[pi-1].dbg&&RV[pi-1].dbg.wd<6))k='miss';
  else if(big)k=loss>=500?'blunder':'mistake';
  else if(wd<=10)k='inacc';else if(wd<=20)k='mistake';else k='blunder';
+ /* walking into a forced mate is never just 'good': chess.com calls it at least a mistake, even when the position was already lost (the win-chance curve is flat there) */
+ if(scA<-90000&&r.sc>-90000&&(k==='excellent'||k==='good'||k==='inacc'))k='mistake';
+ /* Miss (chess.com): the opponent just erred (lost >=6% win chance) and this move throws the chance away (loses >=6% and you are not clearly winning afterwards) */
+ if((k==='inacc'||k==='mistake')&&wd>=6&&scA<=100&&pi>0&&RV[pi-1]&&RV[pi-1].dbg&&RV[pi-1].dbg.wd>=6)k='miss';
  acc=Math.min(acc,{blunder:30,miss:42,mistake:55,inacc:78}[k]||100);if(scA<300)acc=Math.min(acc,100-Math.min(65,loss/5));
  const t=RTG[k],bad=['good','inacc','mistake','miss','blunder'].includes(k),pn=up(NM[pr.b[bm.f].toLowerCase()])+' '+sqn(bm.f)+' → '+sqn(bm.t),wy=why(pr,bm)[0];
  let h=`<span style="background:${t[2]};color:#fff;padding:2px 9px;border-radius:12px;font-weight:700">${t[0]} ${t[1]}</span> ${t[3]}`;
@@ -427,7 +433,7 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  if(loss>=30)h+=`<div class="mu">${loss>5000?'Lets the opponent force a mate':'Cost: about '+(loss/100).toFixed(1)+' pawns (win chance -'+wd.toFixed(0)+'%)'}</div>`;
  if(CH&&!['best','excellent','book','great','brilliant','forced'].includes(k)){const ct=await coachNote(pr,m,bm,k,n,op,pi);if(ct)h+=ct}
  if(H[pi]!==pr)return;
- RV[pi]={s:pr.t,k,acc,sq:m.t,h,ba:bad?{f:bm.f,t:bm.t}:null,bs:r.sc,bm:tok(bm),dbg:{sac:+!!sac,sl:sacL?+!!sacL.sac:null,dip:sacL?sacL.dip:null,mg,wd:+wd.toFixed(1),loss,rs:r.sc,sa:scA}};EV[pi]=(pr.t==='w'?1:-1)*scA;
+ RV[pi]={s:pr.t,k,acc,sq:m.t,h,ba:bad?{f:bm.f,t:bm.t}:null,bs:r.sc,bm:tok(bm),dbg:{sac:+!!sac,sl:sacL?+!!sacL.sac:null,dip:sacL?sacL.dip:null,mg,g:gap?gap.g:null,gw:gap?gap.gw:null,cap:+!!pr.b[m.t],chk:+inChk(n),wd:+wd.toFixed(1),loss,rs:r.sc,sa:scA}};EV[pi]=(pr.t==='w'?1:-1)*scA;
  if(pi===ML.length-1)setBar(EV[pi]);
  if(vi<0){BD={sq:m.t,sym:t[0],col:t[2]};$('hn').innerHTML=h+(window.whyBtn?whyBtn(pi):'');R()}
  save();if(over)setTimeout(showSum,0)}
@@ -5208,7 +5214,7 @@ window.logPGN=function(){
  const o={app:'Chess Coach',engine:(window.SFNEW&&SFNEW.name)||(SFok?'Stockfish (default)':'built-in'),quality:AQ,level:AL||PGNELO||'auto',pgn:pgn().replace(/\n+/g,' '),moves:mv};
  $('px').style.display='block';$('pb2').style.display='flex';$('px').value=JSON.stringify(o);$('px').select();
  $('hn').textContent=L('Analysis log ready: tap Copy and send it to me, with the labels chess.com gave for the same game.','سجل التحليل جاهز: اضغط Copy وابعتهولي مع التصنيفات اللي chess.com عملها لنفس الجيم.')};
-const NAG={brilliant:'$3',great:'$1',inacc:'$6',mistake:'$2',miss:'$2',blunder:'$4'};
+const NAG={brilliant:'$3',great:'$1',inacc:'$6',mistake:'$2',miss:'$9',blunder:'$4'};
 window.annPGN=function(){
  const base=pgn(),res=base.trim().split(' ').pop(),hd=base.split('\n\n')[0]+(!cfg.vs&&(PGNEL.w||PGNEL.b)?'\n[WhiteElo "'+(PGNEL.w||'?')+'"]\n[BlackElo "'+(PGNEL.b||'?')+'"]':'')+'\n[Annotator "Chess Coach"]',sn=sans();let out='',prevC=false;
  for(let i=0;i<sn.length;i++){
