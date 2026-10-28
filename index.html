@@ -221,7 +221,7 @@ function R0(){const bd=$('bd');bd.innerHTML='';const lm=sel>=0?(PRM()?gen({...S,
 function status(){const w=S.t==='w',c=inChk(S),dr=LC.length?drawWhy():'';over=!LC.length||!!dr||!!END;
  $('st').textContent=END?END:!LC.length?(c?'Checkmate! '+(w?'Black':'White')+' wins':'Draw (stalemate)'):dr?dr:(w?'White':'Black')+' to move'+(c?' — Check!':'');if(vi>=0)$('st').textContent='Reviewing move '+vi+' of '+H.length+' — '+(vi%2?'Black':'White')+' to move (tap a piece to try a move)'}
 function upd(){LC=legal(S);status();R();const sn=sans(),cu=vi<0?H.length:vi;$('ml').innerHTML=ML.map((x,i)=>(i%2?'':(i>>1)+1+'. ')+'<span style="cursor:pointer;padding:1px 4px;border-radius:5px'+(cu===i+1?';background:var(--ac);color:#fff':'')+'" onclick="go('+(i+1)+')">'+sn[i]+'</span>').join(' ');const o=opn();$('op').textContent=o?'📖 Opening: '+o:''}
-function click(i){if(Date.now()-SUP<120)return;if(vi>=0){tryClick(i);return}if(PRM()){const p=S.b[i];if(p&&(p<'a')===(cfg.me==='w')){sel=i===sel?-1:i;R();return}
+function click(i){if(Date.now()-SUP<120)return;if(PM){PM=null;$('pm').style.display='none'}if(vi>=0){tryClick(i);return}if(PRM()){const p=S.b[i];if(p&&(p<'a')===(cfg.me==='w')){sel=i===sel?-1:i;R();return}
   if(sel>=0){const mv=gen({...S,t:cfg.me,ep:-1}).find(m=>m.f===sel&&m.t===i);if(mv){PRE={f:mv.f,t:mv.t,pr:mv.pr};snd('pm')}sel=-1;R();return}
   PRE=null;R();return}
  if(over)return;const p=S.b[i],mv=LC.find(m=>m.f===sel&&m.t===i);
@@ -431,7 +431,7 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  if(nl===1)k='forced';
  else if(bk&&!big)k='book';
  else if(loss<=15&&!big&&sac&&scA>-100)k='brilliant';
- else if(loss<=15&&!big&&same&&(gap?(!pr.b[m.t]&&gap.gw>=7.5&&scA>-150&&scA<680):(mg>=300&&Math.abs(r.sc)<500)))k='great';
+ else if(loss<=15&&!big&&same&&(gap?(!pr.b[m.t]&&((gap.gw>=7.5&&scA>-150&&scA<680)||(scA>90000&&gap.gw>=50&&legal(n).length>0))):(mg>=300&&Math.abs(r.sc)<500)))k='great';
  else if(same||wd<=.1)k='best';
  else if(wd<=2&&!big)k='excellent';else if(wd<=5&&!big)k='good';
  else if(wd>=10&&(r.sc>90000||(bc>=300&&!att(apply(pr,bm).b,bm.t,op)))&&!(pi>0&&RV[pi-1]&&RV[pi-1].dbg&&RV[pi-1].dbg.wd<6))k='miss';
@@ -554,6 +554,7 @@ const RORD=['brilliant','great','best','excellent','good','book','inacc','mistak
 const isDeep=()=>ML.length>0&&RV.length>=ML.length&&RV.slice(0,ML.length).every(x=>x&&x.dp);
 function recheck(){const OK=['brilliant','great','best','excellent','good'];
  for(let i=0;i<RV.length-1;i++){const a=RV[i],b=RV[i+1];if(!a||!b||a.bs==null||b.bs==null||!OK.includes(a.k)||!H[i+1])continue;
+  if(a.bm&&ML[i]&&String(a.bm).slice(0,4)===String(ML[i]).slice(0,4))continue;
   const wd=WP(a.bs)-WP(-b.bs);if(wd<12)continue;
   const k=wd<=20?'mistake':'blunder',t=RTG[k],rm=b.bm?fromTok(H[i+1],b.bm):null,rs=rm?san(H[i+1],rm):'';
   a.k=k;a.acc=Math.min(Math.max(0,103.1668*Math.exp(-0.04354*wd)-3.1669),k==='blunder'?28:52);a.ba=null;
