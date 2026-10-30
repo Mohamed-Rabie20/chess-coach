@@ -199,10 +199,11 @@ function why(s,m){const R=[],p=s.b[m.f],l=p.toLowerCase(),w=s.t==='w',op=w?'b':'
  if(l==='p'&&!cp&&[27,28,35,36].includes(m.t))R.push('Fights for the center');
  if(!R.length)R.push('Improves your piece and prepares a stronger plan');
  return R}
-function doHint(){if(over)return;$('hn').textContent='🤔 Thinking...';
- setTimeout(()=>{const r=think(S,2500,12),m=r.m,p=S.b[m.f].toLowerCase();hint=m;sel=-1;R();
+function doHint(){const rv=vi>=0;if(over&&!rv)return;$('hn').textContent='🤔 Thinking...';
+ const cur=()=>vi>=0?(TS||[...H,S][vi]):S,P=cur(),key=fen(P),vk=vi;
+ setTimeout(async()=>{const r=await eng(P,2500,12);if(vi!==vk||fen(cur())!==key)return;if(!r||!r.m){$('hn').textContent='No legal moves in this position.';return}const m=r.m,p=P.b[m.f].toLowerCase();hint=m;sel=-1;R();
   const sc=Math.abs(r.sc)>90000?(r.sc>0?'Forced mate for you 🔥':'A very difficult position'):(r.sc>=0?'You are up about ':'You are down about ')+(Math.abs(r.sc)/100).toFixed(1)+' pawns';
-  $('hn').innerHTML='<b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+'</b><ul>'+why(S,m).map(x=>'<li>'+x+'</li>').join('')+'</ul><div class="mu">Evaluation after it: '+sc+' (searched '+r.d+' moves deep)</div>'},30)}
+  $('hn').innerHTML='<b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+'</b><ul>'+why(P,m).map(x=>'<li>'+x+'</li>').join('')+'</ul><div class="mu">Evaluation after it: '+sc+' (searched '+r.d+' moves deep)</div>'},30)}
 
 function pick(){const lv=cfg.lv;if(lv>=3)return think(S,lv===3?1500:4000,12).m;
  const L=scoreAll(S,lv===1?1:2).sort((a,b)=>b.v-a.v);return lv===1?L[Math.floor(Math.random()*Math.min(4,L.length))].m:L[0].m}
@@ -256,10 +257,11 @@ function sfGo(s,T,skill,only,dc){return new Promise(res=>{let sc=0,d=0,pv='';SFc
 function bookMove(s,rnd){const i=s===S?ML.length:H.indexOf(s);if(i<0)return null;const pre=ML.slice(0,i),c=[];for(const[k]of OP){const q=k.split(' ');if(q.length>i&&pre.every((x,j)=>q[j]===x)&&!c.includes(q[i]))c.push(q[i])}return c.length?fromTok(s,rnd?c[Math.random()*c.length|0]:c[0]):null}
 async function eng0(s,T,maxD,skill=20,only){let dc=0;if(maxD===6){const q=AQP[AQ]||AQP[1];if(WASMOK){dc=q[0];T=q[1]}else T=Math.round(T*q[2])}if(!SFok&&maxD>=10&&!only){const bk=bookMove(s);if(bk)return{m:bk,sc:20,d:1}}if(SFok&&legal(s).length){const r=await Promise.race([sfGo(s,T,skill,only,dc),new Promise(r=>setTimeout(()=>r(null),T+8000))]);if(r){SFfail=0;return r}SFcb=null;try{SF.postMessage('stop');SFpend++}catch(_){}if(++SFfail>=3){SFok=false;$('en').textContent='Engine: built-in (Stockfish stopped responding)'}}return thinkA(s,T,maxD)}
 const eng=(...a)=>(Q=Q.then(()=>eng0(...a)));
-function doHint(){if(over)return;$('hn').textContent='🤔 Thinking...';
- setTimeout(async()=>{const r=await eng(S,2500,12),m=r.m,p=S.b[m.f].toLowerCase();hint=m;sel=-1;R();
+function doHint(){const rv=vi>=0;if(over&&!rv)return;$('hn').textContent='🤔 Thinking...';
+ const cur=()=>vi>=0?(TS||[...H,S][vi]):S,P=cur(),key=fen(P),vk=vi;
+ setTimeout(async()=>{const r=await eng(P,2500,12);if(vi!==vk||fen(cur())!==key)return;if(!r||!r.m){$('hn').textContent='No legal moves in this position.';return}const m=r.m,p=P.b[m.f].toLowerCase();hint=m;sel=-1;R();
   const sc=Math.abs(r.sc)>90000?(r.sc>0?'Forced mate for you 🔥':'A very difficult position'):(r.sc>=0?'You are up about ':'You are down about ')+(Math.abs(r.sc)/100).toFixed(1)+' pawns';
-  $('hn').innerHTML='<b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+'</b><ul>'+why(S,m).map(x=>'<li>'+x+'</li>').join('')+'</ul><div class="mu">Evaluation after it: '+sc+' (searched '+r.d+' moves deep)</div>'},30)}
+  $('hn').innerHTML='<b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+'</b><ul>'+why(P,m).map(x=>'<li>'+x+'</li>').join('')+'</ul><div class="mu">Evaluation after it: '+sc+' (searched '+r.d+' moves deep)</div>'},30)}
 
 async function pick(){const lv=cfg.lv;if(SFok)return(await eng(S,[0,150,400,1000,2500][lv],12,[0,0,6,14,20][lv])).m;
  if(lv>=3)return think(S,lv===3?1500:4000,12).m;
@@ -441,6 +443,8 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  if(scA<-90000&&r.sc>-90000&&(k==='excellent'||k==='good'||k==='inacc'))k=r.sc>-1300?'mistake':'inacc';
  /* Miss (chess.com): the opponent just erred (lost >=6% win chance) and this move throws the chance away (loses >=6% and you are not clearly winning afterwards) */
  if((k==='inacc'||k==='mistake')&&wd>=6&&scA<=100&&pi>0&&RV[pi-1]&&RV[pi-1].dbg&&RV[pi-1].dbg.wd>=6)k='miss';
+ /* Miss, second case (chess.com): your opponent's last real move (forced replies skipped) was a mistake or blunder, you were clearly better before moving (>= +1.5), and your move drops >= 6% win chance, even if you are still ahead afterwards */
+ if((k==='inacc'||k==='mistake'||k==='blunder')&&wd>=6&&r.sc>=150&&pi>0){let oe=false;for(let j=pi-1;j>=Math.max(0,pi-5);j-=2){const x=RV[j];if(!x)break;if(x.k==='forced')continue;oe=x.k==='mistake'||x.k==='blunder';break}if(oe)k='miss'}
  acc=Math.min(acc,{blunder:30,miss:42,mistake:55,inacc:78}[k]||100);if(scA<300&&scA>-300)acc=Math.min(acc,100-Math.min(65,loss/5));
  const t=RTG[k],bad=['good','inacc','mistake','miss','blunder'].includes(k),pn=up(NM[pr.b[bm.f].toLowerCase()])+' '+sqn(bm.f)+' → '+sqn(bm.t),wy=why(pr,bm)[0];
  let h=`<span style="background:${t[2]};color:#fff;padding:2px 9px;border-radius:12px;font-weight:700">${t[0]} ${t[1]}</span> ${t[3]}`;
@@ -476,12 +480,12 @@ async function coachNote(pr,m,bm,k,n,op,pi){const o=[],pk=pr.b[m.f].toLowerCase(
  else if(pk!=='p'&&pi<14&&prev&&prev.slice(2,4)===sqn(m.f)&&!pr.b[m.t])o.push('Tip: you moved the same piece twice in the opening. Try developing a new piece.');
  else if(pi>=14&&pk!=='k'&&!(pr.t==='w'?(n.c.K||n.c.Q):(n.c.k||n.c.q))&&pr.b[pr.t==='w'?60:4]===(pr.t==='w'?'K':'k'))o.push('Tip: castle soon to tuck your king away safely.');
  return o.length?'<div style="margin-top:6px">🎓 '+o.join(' ')+'</div>':''}
-async function coachHint(){if(over||PRM())return;if(vi>=0){vi=-1;upd()}const key=fen(S);
- if(HC&&HC.k===key)HC.l=Math.min(3,HC.l+1);else{$('hn').textContent='🎓 Let me think…';const r=await eng(S,1500,10);if(fen(S)!==key)return;HC={k:key,l:1,r}}
- const m=HC.r.m,p=S.b[m.f].toLowerCase(),w=why(S,m),x=w[0];hint=null;
+async function coachHint(){const rv=vi>=0;if((over&&!rv)||PRM())return;const cur=()=>vi>=0?(TS||[...H,S][vi]):S,P=cur(),key=fen(P),vk=vi;
+ if(HC&&HC.k===key)HC.l=Math.min(3,HC.l+1);else{$('hn').textContent='🎓 Let me think…';const r=await eng(P,1500,10);if(vi!==vk||fen(cur())!==key)return;if(!r||!r.m){$('hn').textContent='No legal moves in this position.';return}HC={k:key,l:1,r}}
+ const m=HC.r.m,p=P.b[m.f].toLowerCase(),w=why(P,m),x=w[0];hint=null;
  if(HC.l===1)$('hn').innerHTML='🎓 <b>Hint 1 of 3</b><br>'+(x.startsWith('Checkmate')?'Look for a way to checkmate!':x.startsWith('Castling')?'Think about the safety of your king.':'Look for a move that '+x.replace(/^./,c=>c.toLowerCase())+'.')+'<br><span class="mu">Tap Coach again for the next hint.</span>';
  else if(HC.l===2){hint={f:m.f,t:m.f};$('hn').innerHTML='🎓 <b>Hint 2 of 3</b><br>Look at your <b>'+NM[p]+'</b> on '+sqn(m.f)+'. Where can it do the most good?<br><span class="mu">Tap Coach again for the move.</span>'}
- else{hint=m;$('hn').innerHTML='🎓 <b>Hint 3 of 3</b><br><b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+' ('+san(S,m)+')</b><ul>'+w.map(y=>'<li>'+y+'</li>').join('')+'</ul>'}
+ else{hint=m;$('hn').innerHTML='🎓 <b>Hint 3 of 3</b><br><b>'+up(NM[p])+' '+sqn(m.f)+' → '+sqn(m.t)+' ('+san(P,m)+')</b><ul>'+w.map(y=>'<li>'+y+'</li>').join('')+'</ul>'}
  R()}
 /* bots: each Elo plays differently (soft-max over move scores for weaker bots, Stockfish skill for stronger ones) */
 async function pick(){const e=bot().e;PSC=null;if(!SFok&&ML.length<14){const bk=bookMove(S,true);if(bk&&Math.random()<.9)return bk}
