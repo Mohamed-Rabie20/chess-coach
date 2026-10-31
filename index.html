@@ -443,8 +443,8 @@ async function review(pr,m,bk,pi){const nl=legal(pr).length,nn=apply(pr,m);let r
  if(scA<-90000&&r.sc>-90000&&(k==='excellent'||k==='good'||k==='inacc'))k=r.sc>-1300?'mistake':'inacc';
  /* Miss (chess.com): the opponent just erred (lost >=6% win chance) and this move throws the chance away (loses >=6% and you are not clearly winning afterwards) */
  if((k==='inacc'||k==='mistake')&&wd>=6&&scA<=100&&pi>0&&RV[pi-1]&&RV[pi-1].dbg&&RV[pi-1].dbg.wd>=6)k='miss';
- /* Miss, second case (chess.com): your opponent's last real move (forced replies skipped) was a mistake or blunder, you were clearly better before moving (>= +1.5), and your move drops >= 6% win chance, even if you are still ahead afterwards */
- if((k==='inacc'||k==='mistake'||k==='blunder')&&wd>=6&&r.sc>=150&&pi>0){let oe=false;for(let j=pi-1;j>=Math.max(0,pi-5);j-=2){const x=RV[j];if(!x)break;if(x.k==='forced')continue;oe=x.k==='mistake'||x.k==='blunder';break}if(oe)k='miss'}
+ /* Miss, second case (chess.com): your opponent's last real move (forced replies skipped) was a mistake or blunder, you were not worse before moving, and your move drops >= 6% win chance, even if you are still ahead afterwards */
+ if((k==='inacc'||k==='mistake'||k==='blunder')&&wd>=6&&r.sc>=0&&pi>0){let oe=false;for(let j=pi-1;j>=Math.max(0,pi-5);j-=2){const x=RV[j];if(!x)break;if(x.k==='forced')continue;oe=x.k==='mistake'||x.k==='blunder';break}if(oe)k='miss'}
  acc=Math.min(acc,{blunder:30,miss:42,mistake:55,inacc:78}[k]||100);if(scA<300&&scA>-300)acc=Math.min(acc,100-Math.min(65,loss/5));
  const t=RTG[k],bad=['good','inacc','mistake','miss','blunder'].includes(k),pn=up(NM[pr.b[bm.f].toLowerCase()])+' '+sqn(bm.f)+' → '+sqn(bm.t),wy=why(pr,bm)[0];
  let h=`<span style="background:${t[2]};color:#fff;padding:2px 9px;border-radius:12px;font-weight:700">${t[0]} ${t[1]}</span> ${t[3]}`;
@@ -464,7 +464,7 @@ function maybeCpu(after){if(!cfg.vs||over||S.t!==cpuSide()){if(after)after();ret
 const _u=undo,_n=newG,_h=doHint;
 undo=function(){vi=-1;PRE=null;END='';_u();for(const s of'wb')if(CK[s]<=0&&tcs()[0])CK[s]=15000;RV.length=Math.min(RV.length,ML.length);EV.length=Math.min(EV.length,ML.length);lastBar();save()};
 newG=function(){vi=-1;GD=false;RDm='';PRE=null;END='';resetCk();RV.length=0;EV.length=0;BD=null;setBar(0);$('px').style.display=$('pb2').style.display='none';_n();snd('s');if(cfg.vs)$('hn').textContent=botTxt()};
-doHint=function(){if(PRM())return;if(vi>=0){vi=-1;upd()}_h()};
+doHint=function(){if(PRM())return;_h()};
 async function coachNote(pr,m,bm,k,n,op,pi){const o=[],pk=pr.b[m.f].toLowerCase(),cz=['inacc','mistake','miss','blunder'].includes(k),nmx=x=>NM[x.toLowerCase()];
  if(cz){const rr=await eng(n,500,5);
   if(rr&&rr.m){const rm=rr.m,rn=apply(n,rm),cp=n.b[rm.t]||(n.b[rm.f].toLowerCase()==='p'&&rm.t===n.ep?'p':'');
@@ -722,7 +722,7 @@ function tS(){const G2=games();if(!G2.length){draw((window.TRENDHTML?TRENDHTML()
  const rows=Object.entries(st).sort((a,b)=>b[1].n-a[1].n).slice(0,25).map(([k,e])=>{const[f,c]=k.split('|'),p=Math.round(100*e.s/e.n);return'<tr><td>'+(c==='w'?'⚪':'⚫')+' '+esc(f)+'</td><td>'+e.n+'</td><td>'+e.w+'/'+e.d+'/'+e.l+'</td><td'+(e.n>=3&&p<40?' style="color:#ca3431;font-weight:700"':'')+'>'+p+'%'+(e.n>=3&&p<40?' ⚠':'')+'</td></tr>'}).join('');
  draw((window.TRENDHTML?TRENDHTML():'')+'<div class="mu">'+G2.length+' games. W/D/L = wins/draws/losses, last column = score.</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px"><tr><th align=left>Opening</th><th>Games</th><th>W/D/L</th><th>Score</th></tr>'+rows+'</table></div>')}
 /* ---- chess.com import ---- */
-function tI(){const L=LS('chessImp',[]);draw('<div class="bt" style="margin:0"><input id="cu" placeholder="chess.com username" value="'+esc(LS('chessUser',''))+'" style="flex:1;min-width:120px;padding:9px;border-radius:10px;border:1px solid var(--mu);background:var(--card);color:var(--tx)"><select id="cm"><option value="1">1 month</option><option value="2" selected>2 months</option><option value="3">3 months</option><option value="6">6 months</option></select><button class="p" onclick="TRN.imp()">Import</button></div><div id="tm" class="mu" style="margin:6px 0">Needs internet. You can still paste a PGN with 📋 PGN/FEN.</div>'+(L.length?'<div><b>'+L.length+' imported games</b></div>'+L.slice(0,15).map((g,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(128,128,128,.25)"><span>'+(g.r===1?'✅':g.r===0?'❌':'🤝')+' '+esc(g.o)+' <span class="mu">'+new Date(g.d).toLocaleDateString()+' · '+esc(fam(nameOf(g.m.split(' '))))+'</span></span><button onclick="TRN.open('+i+')">Review</button></div>').join(''):''))}
+function tI(){const L=LS('chessImp',[]);draw('<div class="bt" style="margin:0"><input id="cu" placeholder="chess.com username" value="'+esc(LS('chessUser',''))+'" style="flex:1;min-width:120px;padding:9px;border-radius:10px;border:1px solid var(--mu);background:var(--card);color:var(--tx)"><select id="cm"><option value="1">1 month</option><option value="2" selected>2 months</option><option value="3">3 months</option><option value="6">6 months</option></select><button class="p" onclick="TRN.imp()">Import</button></div><div id="tm" class="mu" style="margin:6px 0">Needs internet. You can still paste a PGN with 📋 PGN/FEN.</div>'+(L.length?'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>'+L.length+' imported games</b><button onclick="TRN.rs()">🗑 Reset</button></div>'+L.slice(0,15).map((g,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(128,128,128,.25)"><span>'+(g.r===1?'✅':g.r===0?'❌':'🤝')+' '+esc(g.o)+' <span class="mu">'+new Date(g.d).toLocaleDateString()+' · '+esc(fam(nameOf(g.m.split(' '))))+'</span></span><button onclick="TRN.open('+i+')">Review</button></div>').join(''):''))}
 async function imp(){const u=root.querySelector('#cu').value.trim().toLowerCase(),n=+root.querySelector('#cm').value;if(!u)return say('Type your username first.');SV('chessUser',u);say('Loading...');
  try{const r0=await fetch('https://api.chess.com/pub/player/'+encodeURIComponent(u)+'/games/archives');if(r0.status===404)return say('No chess.com account named <b>'+esc(u)+'</b>. Check the spelling.');const A=(await r0.json()).archives||[];if(!A.length)return say('No games found for this user.');
   const L=LS('chessImp',[]),seen=new Set(L.map(x=>x.u));let add=0;
@@ -732,6 +732,7 @@ async function imp(){const u=root.querySelector('#cu').value.trim().toLowerCase(
     L.push({u:g.url,m:m.join(' '),c:w?'w':'b',r,o:op.username+' ('+op.rating+')',d:(g.end_time||0)*1000,pgn:g.pgn.replace(/\{[^}]*\}/g,'').replace(/\s+/g,' ').trim()});seen.add(g.url);add++;await new Promise(z=>setTimeout(z,0))}}
   L.sort((a,b)=>b.d-a.d);if(L.length>200)L.length=200;SV('chessImp',L);tI();say('Imported '+add+' new games.')}
  catch(e){say('Could not load games (no internet, wrong username, or the site blocked the request). You can still paste a PGN.')}}
+function resetImp(){if(!confirm('Remove all imported chess.com games from this app?'))return;SV('chessImp',[]);tI();say('Imported games removed. Tap Import to load them again.')}
 function open2(i){const g=LS('chessImp',[])[i];if(!g)return;$('px').value=g.pgn;loadPGN();flip=g.c==='b';upd();root.style.display='none';window.scrollTo(0,0)}
 function click(i){if(T.tab==='z'&&T.zview){zExit();return}const s=T.s;if(!s||T.busy)return;if((T.tab==='o'||T.tab==='z')&&s.t!==T.user)return;const lm=legal(s);if(T.sel>=0){const mv=lm.filter(m=>m.f===T.sel&&m.t===i);if(mv.length){const m=(T.tab==='z'&&mv.find(x=>tok(x)===T.mv[T.zi]))||mv.find(x=>x.pr==='q')||mv[0];return userMove(m)}}
  T.sel=lm.some(m=>m.f===i)?i:-1;rb()}
@@ -4910,7 +4911,7 @@ function osDel(i){const x=osDue()[i];if(!x)return;const O=LS('chessOS',{});delet
 function osClr(){SV('chessOS',{});tO()}
 async function mWhy(){const it=T.cur;if(!it||!window.WHYR)return;const s=parseFEN(it.f),b=fromTok(s,it.b),pm=it.p?fromTok(s,it.p):null;say('…');
  try{const h=pm&&it.p!==it.b?await window.WHYR(s,pm,'mistake',b,null,0,{}):await window.WHYPZ(s,[it.b]);say(h+'<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}catch(e){say('Could not explain this one.')}}
-window.TRN={mw:mWhy,sq:oSearch,sp:oPick,oa:oAdd,odx:osDel,odc:osClr,zw:zWhy,zb:()=>zGo(-1),zf:()=>zGo(1),pa:zAdd,pc:zClr,oq:()=>{if(!T.ln||T.fam!==root.querySelector('#of').value)oLearn();qGo()},od:osGo,zr:zRush,za:zAll,ol:oLearn,on:lNext,ob:lBack,oh:oHint,zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2};
+window.TRN={mw:mWhy,sq:oSearch,sp:oPick,oa:oAdd,odx:osDel,odc:osClr,zw:zWhy,zb:()=>zGo(-1),zf:()=>zGo(1),pa:zAdd,pc:zClr,oq:()=>{if(!T.ln||T.fam!==root.querySelector('#of').value)oLearn();qGo()},od:osGo,zr:zRush,za:zAll,ol:oLearn,on:lNext,ob:lBack,oh:oHint,zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2,rs:resetImp};
 })();
 </script>
 <script>
