@@ -568,8 +568,8 @@ function finishGame(){if(GD||!ML.length)return;GD=true;
  ARCH.unshift(rec);ARCH.length=Math.min(ARCH.length,100);try{localStorage.setItem('chessArch',JSON.stringify(ARCH))}catch(e){}save();bars()}
 let ARCHPREV=null;
 function resetArch(){if(!confirm('Delete ALL games saved in My games? This cannot be undone.'))return;ARCH.length=0;try{localStorage.setItem('chessArch','[]')}catch(e){}ARCHPREV=null;showArch(true);try{bars()}catch(e){}}
-function showArch(force){const hn=$('hn');if(!force&&hn.querySelector('[data-arch]')){hn.innerHTML=ARCHPREV!=null?ARCHPREV:'';ARCHPREV=null;return}if(!hn.querySelector('[data-arch]'))ARCHPREV=hn.innerHTML;const v=ARCH.filter(g=>g.vs),c=x=>v.filter(g=>g.res===x).length;
- $('hn').innerHTML='<div data-arch="1" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>📚 My games</b>'+(ARCH.length?'<button onclick="resetArch()">🗑 Reset</button>':'')+'</div><div class="mu" style="margin:4px 0 8px">Rating '+RT+' · vs computer: '+c(1)+' wins, '+c(.5)+' draws, '+c(0)+' losses</div>'+(ARCH.length?'<div class=\"gl\">'+ARCH.map((g,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(128,128,128,.25)"><span>'+(g.res===1?'✅':g.res===0?'❌':g.res===.5?'🤝':'♟')+' '+g.bot+' <span class="mu">'+new Date(g.d).toLocaleDateString()+' · '+g.n+' plies'+(g.dr!=null?' · '+(g.dr>=0?'+':'')+g.dr:'')+'</span></span><button onclick="openGame('+i+')">Review</button></div>').join('')+'</div>':'<div class="mu">No finished games yet.</div>')}
+function showArch(force){const hn=$('rpt');if(!force&&hn.querySelector('[data-arch]')){hn.innerHTML=ARCHPREV!=null?ARCHPREV:'';ARCHPREV=null;return}if(!hn.querySelector('[data-arch]'))ARCHPREV=hn.innerHTML;const v=ARCH.filter(g=>g.vs),c=x=>v.filter(g=>g.res===x).length;
+ $('rpt').innerHTML='<div data-arch="1" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>📚 My games</b>'+(ARCH.length?'<button onclick="resetArch()">🗑 Reset</button>':'')+'</div><div class="mu" style="margin:4px 0 8px">Rating '+RT+' · vs computer: '+c(1)+' wins, '+c(.5)+' draws, '+c(0)+' losses</div>'+(ARCH.length?'<div class=\"gl\">'+ARCH.map((g,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(128,128,128,.25)"><span>'+(g.res===1?'✅':g.res===0?'❌':g.res===.5?'🤝':'♟')+' '+g.bot+' <span class="mu">'+new Date(g.d).toLocaleDateString()+' · '+g.n+' plies'+(g.dr!=null?' · '+(g.dr>=0?'+':'')+g.dr:'')+'</span></span><button onclick="openGame('+i+')">Review</button></div>').join('')+'</div>':'<div class="mu">No finished games yet.</div>')}
 function openGame(i){const g=ARCH[i];if(!g)return;if(ML.length&&!over&&!GD&&!confirm('Replace the current game?'))return;$('px').value=g.pgn;loadPGN()}
 {const _u=upd;upd=function(){_u();if(over&&vi<0)finishGame()}}
 {const _d=undo;undo=function(){if(GD&&over&&cfg.vs){$('hn').textContent='This game is finished — tap New game to play again.';return}_d()}}
@@ -630,9 +630,9 @@ async function analyzeAll(){if(AZ||!ML.length)return;AZ=1;const n=ML.length,oq=A
  RV=[];EV=[];vi=0;
  try{for(let i=0;i<n;i++){if(H.length!==n||!H[i])break;const m=fromTok(H[i],ML[i]);if(!m)break;
   $('st').textContent='🔍 Deep analysis '+(i+1)+' / '+n;
-  $('hn').innerHTML='<div class="gr"><h3>🔍 Analyzing game…</h3><div class="gbar"><i style="width:'+Math.round(i/n*100)+'%"></i></div><div class="mu">Move '+(i+1)+' of '+n+'</div></div>';
+  $('rpt').innerHTML='<div class="gr"><h3>🔍 Analyzing game…</h3><div class="gbar"><i style="width:'+Math.round(i/n*100)+'%"></i></div><div class="mu">Move '+(i+1)+' of '+n+'</div></div>';
   await review(H[i],m,isBook(ML.slice(0,i+1)),i)}
-  if(WASMOK&&SFok&&H.length===n){const K=[];RV.forEach((x,i)=>{if(x&&['inacc','mistake','miss','blunder','brilliant','great'].includes(x.k))K.push(i)});K.length=Math.min(K.length,18);AQ=Math.max(2,oq);let j=0;for(const i of K){if(H.length!==n||!H[i])break;const m=fromTok(H[i],ML[i]);if(!m)break;$('st').textContent='Verifying key moves '+(++j)+' / '+K.length;$('hn').innerHTML='<div class="gr"><h3>Verifying key moves...</h3><div class="gbar"><i style="width:'+Math.round(j/K.length*100)+'%"></i></div><div class="mu">'+j+' of '+K.length+'</div></div>';await review(H[i],m,isBook(ML.slice(0,i+1)),i)}}
+  if(WASMOK&&SFok&&H.length===n){const K=[];RV.forEach((x,i)=>{if(x&&['inacc','mistake','miss','blunder','brilliant','great'].includes(x.k))K.push(i)});K.length=Math.min(K.length,18);AQ=Math.max(2,oq);let j=0;for(const i of K){if(H.length!==n||!H[i])break;const m=fromTok(H[i],ML[i]);if(!m)break;$('st').textContent='Verifying key moves '+(++j)+' / '+K.length;$('rpt').innerHTML='<div class="gr"><h3>Verifying key moves...</h3><div class="gbar"><i style="width:'+Math.round(j/K.length*100)+'%"></i></div><div class="mu">'+j+' of '+K.length+'</div></div>';await review(H[i],m,isBook(ML.slice(0,i+1)),i)}}
    if(H.length===n){recheck();RV.forEach(x=>x&&(x.dp=1))}}
  finally{AQ=oq;AZ=0;vi=-1;save()}
  if(H.length===n){lastBar();upd();showSum()}}
@@ -652,7 +652,7 @@ function showSum(){const nm=s=>(s==='w'?'White':'Black')+(cfg.vs&&s===cfg.me?' (
  pts=EV.map((v,i)=>v==null?null:[i,v]).filter(Boolean),X=i=>(i/Math.max(n-1,1)*300).toFixed(1),Y=v=>(35-33*Math.tanh(v/500)).toFixed(1);
  let g='';if(pts.length>1){g='<svg viewBox="0 0 300 70" onclick="gSv(event)" style="width:100%;height:70px;margin-top:14px;border-radius:10px;background:#34373f;cursor:pointer"><polygon fill="#f1f1f1" points="'+X(pts[0][0])+',70 '+pts.map(([i,v])=>X(i)+','+Y(v)).join(' ')+' '+X(pts[pts.length-1][0])+',70"/><line x1="0" y1="35" x2="300" y2="35" stroke="#888" stroke-width=".5"/>'+RV.map((x,i)=>x&&EV[i]!=null&&['mistake','blunder','miss','brilliant','great'].includes(x.k)?'<circle cx="'+X(i)+'" cy="'+Y(EV[i])+'" r="2.6" fill="'+RTG[x.k][2]+'" stroke="#fff" stroke-width=".6"/>':'').join('')+'</svg><div class="mu" style="font-size:11px;margin-top:3px">Tap the graph to jump to a move.</div>'}
  const has=RV.some(Boolean),rows=RORD.map(k=>{const a=cnt('w',k),b=cnt('b',k),t=RTG[k];return `<div class="l">${t[1]}</div><div class="n ${a?'':'z'}" style="color:${t[2]}">${a}</div><div class="gi" style="background:${t[2]}">${t[0]}</div><div class="n ${b?'':'z'}" style="color:${t[2]}">${b}</div>`}).join('');
- $('hn').innerHTML='<div class="gr"><h3>📊 Game Review</h3>'+(RDm?'<div class="mu" style="margin:-6px 0 8px">'+RDm+'</div>':'')+'<div class="gg"><div class="l">Players</div><div class="gp2"><b>'+pn('w').split(' ')[0]+'</b>'+(cfg.vs?(pn('w').split(' ').slice(1).join(' ')||'')+' '+pr('w'):'White'+(GD&&PGNEL.w?' '+PGNEL.w:''))+'</div><div></div><div class="gp2"><b>'+pn('b').split(' ')[0]+'</b>'+(cfg.vs?(pn('b').split(' ').slice(1).join(' ')||'')+' '+pr('b'):'Black'+(GD&&PGNEL.b?' '+PGNEL.b:''))+'</div><div class="l">Accuracy</div><div class="ac w">'+ac('w')+'</div><div></div><div class="ac b">'+ac('b')+'</div><hr>'+rows+extraHTML()+'</div>'+g+(n?'<button class="gbtn" onclick="startRev()">'+(isDeep()?'▶ Start Review':'🔍 Analyze & Start Review')+'</button>':'<div class="mu">No moves yet.</div>')+(n&&has&&!isDeep()?'<div class="mu" style="margin-top:8px;font-size:12px">Live ratings are quick. Analyze runs a deeper engine check on every move (both sides) and corrects any move that looked best but loses to the opponent’s reply.</div>':'')+'</div>'}
+ $('rpt').innerHTML='<div class="gr"><h3>📊 Game Review</h3>'+(RDm?'<div class="mu" style="margin:-6px 0 8px">'+RDm+'</div>':'')+'<div class="gg"><div class="l">Players</div><div class="gp2"><b>'+pn('w').split(' ')[0]+'</b>'+(cfg.vs?(pn('w').split(' ').slice(1).join(' ')||'')+' '+pr('w'):'White'+(GD&&PGNEL.w?' '+PGNEL.w:''))+'</div><div></div><div class="gp2"><b>'+pn('b').split(' ')[0]+'</b>'+(cfg.vs?(pn('b').split(' ').slice(1).join(' ')||'')+' '+pr('b'):'Black'+(GD&&PGNEL.b?' '+PGNEL.b:''))+'</div><div class="l">Accuracy</div><div class="ac w">'+ac('w')+'</div><div></div><div class="ac b">'+ac('b')+'</div><hr>'+rows+extraHTML()+'</div>'+g+(n?'<button class="gbtn" onclick="startRev()">'+(isDeep()?'▶ Start Review':'🔍 Analyze & Start Review')+'</button>':'<div class="mu">No moves yet.</div>')+(n&&has&&!isDeep()?'<div class="mu" style="margin-top:8px;font-size:12px">Live ratings are quick. Analyze runs a deeper engine check on every move (both sides) and corrects any move that looked best but loses to the opponent’s reply.</div>':'')+'</div>'}
 {const _u3=upd;upd=function(){_u3();try{document.querySelectorAll('#ml span').forEach((sp,i)=>{const x=RV[i];if(x&&RTG[x.k]&&['brilliant','great','best','inacc','mistake','miss','blunder'].includes(x.k))sp.insertAdjacentHTML('beforeend','<sup style="color:'+RTG[x.k][2]+'">'+RTG[x.k][0]+'</sup>')})}catch(e){}}}
 upd();
 </script>
@@ -745,11 +745,12 @@ const tb=Array.from(document.querySelectorAll('button')).find(b=>/Analyze/.test(
 if(tb){const nb=document.createElement('button');nb.textContent='🏋 Train';nb.onclick=()=>{root.style.display=root.style.display==='none'?'block':'none';if(root.style.display==='block'){harvest();tab(T.tab)}};tb.parentNode.appendChild(nb);$('hn').parentNode.insertBefore(root,$('hn'))}
 function harvest(){const L=LS('chessMist',[]);let add=0;try{for(let i=0;i<RV.length;i++){const r=RV[i];if(!r||!H[i]||!r.bm||!['mistake','blunder','miss'].includes(r.k))continue;const f=fen(H[i]);if(L.some(x=>x.f===f))continue;L.push({f,b:r.bm,p:ML[i],k:r.k,n:0,due:0,d:Date.now()});add++}}catch(e){}if(add){if(L.length>300)L.splice(0,L.length-300);SV('chessMist',L)}}
 {const _a=analyzeAll;analyzeAll=async function(){await _a.apply(this,arguments);harvest()}}
-function board(){const s=T.s;if(!s)return'';const fl=T.tab==='o'||T.tab==='z'?T.user==='b':s.t==='b',lm=T.sel>=0?legal(s).filter(m=>m.f===T.sel).map(m=>m.t):[];let h='<div style="width:100%;display:grid;grid-template-columns:repeat(8,1fr);border-radius:6px;overflow:hidden;font-size:calc(100cqw/8*.78);line-height:1;margin:0">';
+function board(){window.TRMAIN&&setTimeout(window.TRMAIN,0);return''}
+function boardOld(){const s=T.s;if(!s)return'';const fl=T.tab==='o'||T.tab==='z'?T.user==='b':s.t==='b',lm=T.sel>=0?legal(s).filter(m=>m.f===T.sel).map(m=>m.t):[];let h='<div style="width:100%;display:grid;grid-template-columns:repeat(8,1fr);border-radius:6px;overflow:hidden;font-size:calc(100cqw/8*.78);line-height:1;margin:0">';
  for(let k=0;k<64;k++){const i=fl?63-k:k,p=s.b[i],dk=((i>>3)+(i&7))%2;h+='<div class="sq '+(dk?'dk':'lt')+(i===T.sel?' sel':'')+(lm.includes(i)?' mv':'')+'"'+(T.arr&&i===T.arr.f?' style="box-shadow:inset 0 0 0 .2em #f5a623"':'')+' onclick="TRN.c('+i+')">'+(p?'<span class="'+(p<'a'?'pw':'pb')+'">'+G[p.toLowerCase()]+'</span>':'')+'</div>'}h+='</div>';let ar='';const A=T.arr;if(A&&A.f!==A.t){const P=i=>{let c=i&7,r=i>>3;if(fl){c=7-c;r=7-r}return[c+.5,r+.5]},[x1,y1]=P(A.f),[x2,y2]=P(A.t),d=Math.hypot(x2-x1,y2-y1)||1,ex=x2-(x2-x1)/d*.3,ey=y2-(y2-y1)/d*.3;ar='<svg viewBox="0 0 8 8" style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none"><defs><marker id="zah" markerWidth="4" markerHeight="4" refX="2.2" refY="2" orient="auto"><path d="M0,0L4,2L0,4z" fill="#f5a623"/></marker></defs><line x1="'+x1+'" y1="'+y1+'" x2="'+ex+'" y2="'+ey+'" stroke="#f5a623" stroke-width=".2" stroke-linecap="round" opacity=".92" marker-end="url(#zah)"/></svg>'}return'<div style="position:relative;width:min(var(--W),100%);container-type:inline-size;margin:8px 0">'+h+ar+'</div>'}
 function say(m){T.msg=m;const e=root.querySelector('#tm');if(e)e.innerHTML=m}
 function draw(extra){const tabs=[['m','🎯 Mistakes'],['o','📖 Openings'],['s','📈 Stats'],['i','👤 chess.com'],['z','🧩 Puzzles']];root.innerHTML='<div class="bt" style="margin:0 0 6px">'+tabs.map(t=>'<button class="'+(T.tab===t[0]?'p':'')+'" onclick="TRN.t(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>'+(extra||'')}
-function tab(t){T.tab=t;T.rush=null;clearInterval(T.rt);T.learn=0;T.arr=null;T.s=null;T.sel=-1;T.msg='';({m:tM,o:tO,s:tS,i:tI,z:tZ})[t]()}
+function tab(t){T.tab=t;T.rush=null;clearInterval(T.rt);T.learn=0;T.arr=null;T.s=null;T.sel=-1;T.msg='';({m:tM,o:tO,s:tS,i:tI,z:tZ})[t]();window.TRMAIN&&setTimeout(window.TRMAIN,0)}
 /* ---- mistakes drill ---- */
 function due(){return LS('chessMist',[]).filter(x=>x.due<=Date.now()).sort((a,b)=>a.due-b.due)}
 function tM(){const L=LS('chessMist',[]),d=due();if(!L.length){draw('<div class="mu">No saved mistakes yet. Play or load a game, tap 🔍 Analyze, and your mistakes and blunders are saved here as a drill.</div>');return}
@@ -4972,7 +4973,7 @@ function osDel(i){const x=osDue()[i];if(!x)return;const O=LS('chessOS',{});delet
 function osClr(){SV('chessOS',{});tO()}
 async function mWhy(){const it=T.cur;if(!it||!window.WHYR)return;const s=parseFEN(it.f),b=fromTok(s,it.b),pm=it.p?fromTok(s,it.p):null;say('…');
  try{const h=pm&&it.p!==it.b?await window.WHYR(s,pm,'mistake',b,null,0,{}):await window.WHYPZ(s,[it.b]);say(h+'<div class="bt"><button class="p" onclick="TRN.t(\'m\')">Next</button></div>')}catch(e){say('Could not explain this one.')}}
-window.TRN={mw:mWhy,sq:oSearch,sp:oPick,oa:oAdd,odx:osDel,odc:osClr,zw:zWhy,zb:()=>zGo(-1),zf:()=>zGo(1),pa:zAdd,pc:zClr,oq:()=>{if(!T.ln||T.fam!==root.querySelector('#of').value)oLearn();qGo()},od:osGo,zr:zRush,za:zAll,ol:oLearn,on:lNext,ob:lBack,oh:oHint,zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2,rs:resetImp};
+window.TRG=()=>T;window.TRN={mw:mWhy,sq:oSearch,sp:oPick,oa:oAdd,odx:osDel,odc:osClr,zw:zWhy,zb:()=>zGo(-1),zf:()=>zGo(1),pa:zAdd,pc:zClr,oq:()=>{if(!T.ln||T.fam!==root.querySelector('#of').value)oLearn();qGo()},od:osGo,zr:zRush,za:zAll,ol:oLearn,on:lNext,ob:lBack,oh:oHint,zn:zNew,zh:zHint,zs:zSol,zl:zLoad,t:tab,c:click,go:oGo,skip,imp,open:open2,rs:resetImp};
 })();
 </script>
 <script>
@@ -5156,15 +5157,15 @@ window.WHYPZ=async(pos,toks)=>{
 let PREV='',K=0;
 window.TW=null;
 window.whyBtn=i=>RV[i]&&H[i]&&ML[i]?'<div class="bt" style="margin-top:8px"><button onclick="WHY('+i+')">💡 '+L('Why?','ليه؟')+'</button></div>':'';
-const show=async f=>{const id=++K;PREV=$('hn').innerHTML;$('hn').innerHTML='<div class="mu">'+L('Working out why…','بحلل السبب…')+'</div>';
+const show=async f=>{const id=++K;try{$('cbb').classList.add('big')}catch(e){}PREV=$('hn').innerHTML;$('hn').innerHTML='<div class="mu">'+L('Working out why…','بحلل السبب…')+'</div>';
  let h;try{h=await f()}catch(e){h='<div class="mu">'+L('Could not explain this move.','معرفتش أشرح النقلة دي.')+'</div>'}
  if(id!==K)return;$('hn').innerHTML=h+'<div class="bt"><button onclick="WHYB()">← '+L('Back','رجوع')+'</button></div>'};
 window.WHY=i=>{const pr=H[i],e=RV[i],m=pr&&fromTok(pr,ML[i]);if(!m||!e)return;
  const sg=pr.t==='w'?1:-1,loss=e.bs!=null&&EV[i]!=null?Math.max(0,e.bs-sg*EV[i]):0,bm=e.bm?fromTok(pr,e.bm):null;
  show(()=>report(pr,m,e.k,bm,e.bs,loss,{ix:i}))};
 window.WHYT=()=>{const w=window.TW;if(!w)return;show(()=>report(w.b,w.m,w.k,w.bm,w.bs,w.loss||0))};
-window.WHYB=()=>{K++;$('hn').innerHTML=PREV};
-const g0=go;go=function(t){K++;return g0(t)};
+window.WHYB=()=>{K++;try{$('cbb').classList.remove('big')}catch(e){}$('hn').innerHTML=PREV};
+const g0=go;go=function(t){K++;try{$('cbb').classList.remove('big')}catch(e){}return g0(t)};
 })();
 
 /* v10: Elo from PGN, accuracy trend, annotated PGN export */
@@ -5278,7 +5279,7 @@ function renderReport(){
  let g='';const cs=has?coachSum(km,pname,rated):'';
  if(pts.length>1)g='<div class="rx"><b>📉 '+L('Evaluation','التقييم')+'</b><svg viewBox="0 0 300 70" onclick="gSv(event)" style="width:100%;height:70px;border-radius:10px;background:rgba(128,128,128,.18);cursor:pointer"><defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b8cff" stop-opacity=".55"/><stop offset="1" stop-color="#5b8cff" stop-opacity=".05"/></linearGradient></defs><polygon fill="url(#eg)" points="'+X(pts[0][0])+',70 '+pts.map(([i,q])=>X(i)+','+Y(q)).join(' ')+' '+X(pts[pts.length-1][0])+',70"/><polyline fill="none" stroke="#5b8cff" stroke-width="1.6" points="'+pts.map(([i,q])=>X(i)+','+Y(q)).join(' ')+'"/><line x1="0" y1="35" x2="300" y2="35" stroke="#888" stroke-width=".5" stroke-dasharray="3 3"/>'
   +RV.map((x,i)=>x&&EV[i]!=null&&['mistake','blunder','miss','brilliant','great'].includes(x.k)?'<circle cx="'+X(i)+'" cy="'+Y(EV[i])+'" r="2.8" fill="'+RTG[x.k][2]+'" stroke="#fff" stroke-width=".6"/>':'').join('')+'</svg><div class="mu" style="font-size:11px;margin-top:3px">'+L('Tap the graph to jump to a move.','اضغط على الرسم عشان تروح لنقلة.')+'</div></div>';
- $('hn').innerHTML='<div class="rp"><h3>📋 '+L('Game report','تقرير الجيم')+'</h3>'+(RDm?'<div class="mu">'+RDm+'</div>':'')+(n?'<div class="rg">'+pl('w')+pl('b')+'</div>'+kmh+cs+rad+g
+ $('rpt').innerHTML='<div class="rp"><h3>📋 '+L('Game report','تقرير الجيم')+'</h3>'+(RDm?'<div class="mu">'+RDm+'</div>':'')+(n?'<div class="rg">'+pl('w')+pl('b')+'</div>'+kmh+cs+rad+g
   +(has?'<button onclick="copyAnn()" style="margin:6px 0">📋 '+L('Copy annotated PGN','انسخ PGN بالتعليقات')+'</button>':'')
   +'<button class="gbtn" onclick="startRev()">'+(isDeep()?'▶ '+L('Start review','ابدأ المراجعة'):'🔍 '+L('Analyze & start review','حلّل وابدأ المراجعة'))+'</button>'
   +(has&&!isDeep()?'<div class="mu" style="font-size:12px">'+L('Live ratings are quick. Analyze runs a deeper engine check on every move for both sides.','التقييم اللحظي سريع. التحليل بيعمل فحص أعمق لكل نقلة للاعبين.')+'</div>':'')
@@ -5313,7 +5314,7 @@ function showResult(){
   +'<div style="font-size:46px;line-height:1">'+emoji+'</div><div style="font-size:28px;font-weight:800;margin:8px 0 2px;color:'+col+'">'+title+'</div>'
   +'<div style="opacity:.85;font-size:14px;margin-bottom:6px">'+why+'</div>'+(cfg.vs&&RDm?'<div style="font-size:13px;opacity:.8;margin-bottom:8px">'+RDm+'</div>':'')
   +'<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px"><button onclick="document.getElementById(\'rsm\').remove();newG()" style="background:#7fb83b;color:#fff;font-weight:800;font-size:18px;padding:12px;border-radius:12px;border:0">'+L('New game','جيم جديد')+'</button>'
-  +'<button onclick="document.getElementById(\'rsm\').remove();try{$(\'hn\').scrollIntoView({behavior:\'smooth\'})}catch(e){}" style="padding:10px;border-radius:12px">📋 '+L('Game report','تقرير الجيم')+'</button></div></div>';
+  +'<button onclick="document.getElementById(\'rsm\').remove();try{UI.rep()}catch(e){}" style="padding:10px;border-radius:12px">📋 '+L('Game report','تقرير الجيم')+'</button></div></div>';
  document.body.appendChild(d)}
 {const fg0=finishGame;finishGame=function(){const first=!GD&&ML.length>0;fg0();if(first)setTimeout(showResult,450)}}
 /* ---- analysis log: lets you send me the engine's numbers for every move, to tune the ratings ---- */
@@ -5395,15 +5396,102 @@ window.UI=(function(){
   else if(rp&&rp.style.display==='block')rp.style.display='none';
   document.body.dataset.tab=n;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===n));
-  try{window.scrollTo(0,0)}catch(e){}}
+  try{window.scrollTo(0,0)}catch(e){}try{window.TRSYNC&&TRSYNC()}catch(e){}try{R()}catch(e){}}
  function ng(on){$('ngs').classList.toggle('on',!!on);if(on)lab()}
  $('ngs').addEventListener('click',e=>{if(e.target===$('ngs'))ng(false)});
  if(langSel)langSel.addEventListener('change',()=>setTimeout(lab,80));
  /* auto-switch: loading a game or stepping back goes to Review */
  if(typeof loadPGN==='function'){const _lp=loadPGN;loadPGN=function(){const r=_lp.apply(this,arguments);try{tab('review')}catch(e){}return r}}
- if(typeof go==='function'){const _go=go;go=function(){const r=_go.apply(this,arguments);try{if(vi>=0&&document.body.dataset.tab==='play')tab('review')}catch(e){}return r}}
+ 
  lab();tab('play');
  return{tab,ng,lab};
+})();
+</script>
+<style id="v11css">
+/* ===== v11: coach bubble above the board, Review-only report, moves strip + arrows in Play, Train uses the main board ===== */
+#pcol{display:flex;flex-direction:column}
+#pcol>.sec[data-s=nav]{order:1}#pcol>#ml{order:2}#pcol>.sec[data-s=hint]{order:3}#pcol>.sec[data-s=play]{order:4}#pcol>.sec[data-s=act]{order:5}#pcol>#trp{order:6}#pcol>#rpt{order:7}#pcol>.sec[data-s=more]{order:8}
+body[data-tab=play] .sec[data-s=nav]{display:flex}
+body[data-tab=play] #ml{white-space:nowrap;overflow-x:auto;overflow-y:hidden;max-height:none;padding:8px 10px;margin-top:0;scrollbar-width:none}
+body[data-tab=play] #ml::-webkit-scrollbar{display:none}
+#cbx{direction:ltr;display:flex;align-items:flex-start;gap:10px;margin:6px 0 10px}
+#cav{flex:0 0 42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:23px;background:linear-gradient(145deg,#3dbb7e,#2a8a5a);box-shadow:0 2px 8px rgba(0,0,0,.25);margin-top:4px}
+#cbb{position:relative;flex:1;min-width:0;background:var(--card);border:1px solid var(--ln);box-shadow:var(--sh);border-radius:16px;padding:9px 12px;margin-left:4px}
+#cbb::before{content:"";position:absolute;left:-7px;top:16px;width:12px;height:12px;background:var(--card);border-left:1px solid var(--ln);border-bottom:1px solid var(--ln);transform:rotate(45deg)}
+#cbb #hn{background:none;border:0;box-shadow:none;padding:0;border-radius:0;min-height:38px;max-height:150px;overflow:auto;font-size:14px;line-height:1.5;-webkit-overflow-scrolling:touch}
+#cbb.big #hn{max-height:44vh}
+#cbb.ov{padding-right:38px}
+#cbt{position:absolute;top:5px;right:5px;width:28px;height:28px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;border:0;background:rgba(128,128,128,.2);color:var(--tx)}
+#cbb:not(.ov) #cbt{display:none}
+#cbb .aw{margin-top:6px;padding-top:6px;border-top:1px dashed var(--ln)}
+#cbb .aw ul{margin:0}
+#rpt{display:none;background:var(--card);border:1px solid var(--ln);box-shadow:var(--sh);border-radius:14px;padding:12px 14px;margin:10px 0}
+body[data-tab=review] #rpt:not(:empty){display:block}
+body[data-tab=train] #cbx,body[data-tab=train] #st,body[data-tab=train] #op,body[data-tab=train] #eb,body[data-tab=train] #pt,body[data-tab=train] #pbm{display:none}
+@media (max-width:979px){body.nobd #bcol{display:none}h1{margin:0 0 4px;font-size:17px}h1 img{width:28px;height:28px}#st{margin:4px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#op{margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#eb{margin:4px 0!important}#cbx{margin:4px 0 8px}}
+</style>
+<script>
+/* v11 */
+(()=>{
+const $=id=>document.getElementById(id);
+const ar=()=>{try{return localStorage.getItem('chessLang')==='ar'}catch(e){return false}};
+const L=(e,a)=>ar()?a:e;
+const hn=$('hn'),bcol=$('bcol'),ml=$('ml'),root=$('trp');
+/* ---- coach bubble: the rating card, hints and "Why?" now sit right above the board (like chess.com's coach) ---- */
+const cbx=document.createElement('div');cbx.id='cbx';
+cbx.innerHTML='<div id="cav" aria-hidden="true">\uD83C\uDF93</div><div id="cbb"><button id="cbt" type="button">\u2304</button></div>';
+bcol.insertBefore(cbx,$('pt'));
+const cbb=$('cbb'),cbt=$('cbt');cbb.insertBefore(hn,cbt);
+const chk=()=>{const big=cbb.classList.contains('big');cbb.classList.toggle('ov',big||hn.scrollHeight>hn.clientHeight+4);cbt.textContent=big?'\u2303':'\u2304'};
+new MutationObserver(()=>requestAnimationFrame(chk)).observe(hn,{childList:true,subtree:true,characterData:true});
+cbt.onclick=()=>{cbb.classList.toggle('big');chk()};
+/* ---- Review-only report area ---- */
+const rpt=document.createElement('div');rpt.id='rpt';ml.parentNode.insertBefore(rpt,ml.nextSibling);
+UI.rep=function(){UI.tab('review');try{showSum()}catch(e){}setTimeout(()=>{try{rpt.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}},80)};
+document.querySelectorAll('.sec[data-s=act] button').forEach(b=>{if((b.getAttribute('onclick')||'').includes('showSum')){b.removeAttribute('onclick');b.onclick=()=>UI.rep()}});
+{const _n=newG;newG=function(){rpt.innerHTML='';return _n.apply(this,arguments)}}
+{const _l=loadPGN;loadPGN=function(){rpt.innerHTML='';return _l.apply(this,arguments)}}
+{const _a=analyzeAll;analyzeAll=function(){try{if(document.body.dataset.tab!=='review')UI.tab('review');setTimeout(()=>{try{rpt.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){}},60)}catch(e){}return _a.apply(this,arguments)}}
+/* ---- moves strip follows the current move ---- */
+{const _u=upd;upd=function(){const r=_u.apply(this,arguments);try{const cur=ml.querySelector('span[style*="var(--ac)"]');if(cur&&ml.scrollWidth>ml.clientWidth){const a=cur.getBoundingClientRect(),b=ml.getBoundingClientRect();ml.scrollLeft+=(a.left-b.left)-b.width/2+a.width/2}}catch(e){}return r}}
+/* ---- Train drills draw on the main board ---- */
+const tOn=()=>{if(document.body.dataset.tab!=='train'||!root||root.style.display!=='block')return null;const T=window.TRG&&TRG();return T&&T.s?T:null};
+window.TRSYNC=()=>{document.body.classList.toggle('nobd',document.body.dataset.tab==='train'&&!tOn())};
+window.TRMAIN=()=>{try{TRSYNC();R()}catch(e){}};
+function trainRender(T){
+ const s=T.s,k={S,LC,sel,flip,vi,TS,TL,BD,hint,PRE,vs:cfg.vs};
+ try{S=s;LC=legal(s);sel=T.sel;vi=-1;TS=s;TL=null;BD=null;hint=null;PRE=null;cfg.vs=0;flip=(T.tab==='o'||T.tab==='z')?T.user==='b':s.t==='b';R0()}
+ finally{S=k.S;LC=k.LC;sel=k.sel;flip=k.flip;vi=k.vi;TS=k.TS;TL=k.TL;BD=k.BD;hint=k.hint;PRE=k.PRE;cfg.vs=k.vs}
+ let ar='';const A=T.arr;
+ if(A&&A.f!==A.t){const fl=(T.tab==='o'||T.tab==='z')?T.user==='b':s.t==='b',P=i=>{let c=i&7,r=i>>3;if(fl){c=7-c;r=7-r}return[c+.5,r+.5]},[x1,y1]=P(A.f),[x2,y2]=P(A.t),d=Math.hypot(x2-x1,y2-y1)||1,ex=x2-(x2-x1)/d*.3,ey=y2-(y2-y1)/d*.3;
+  ar='<defs><marker id="zah" markerWidth="4" markerHeight="4" refX="2.2" refY="2" orient="auto"><path d="M0,0L4,2L0,4z" fill="#f5a623"/></marker></defs><line x1="'+x1+'" y1="'+y1+'" x2="'+ex+'" y2="'+ey+'" stroke="#f5a623" stroke-width=".2" stroke-linecap="round" opacity=".92" marker-end="url(#zah)"/>'}
+ $('ar').innerHTML=ar}
+{const _R=R;R=function(){const T=tOn();if(!T)return _R.apply(this,arguments);trainRender(T)}}
+{const _c=click;click=function(i){const T=tOn();if(T){try{TRN.c(i)}catch(e){}return}return _c.apply(this,arguments)}}
+/* ---- auto "Why": in Review the coach adds the key reasons under the rating after a short pause ---- */
+const awOn=()=>{try{return localStorage.getItem('chessAutoWhy')!=='0'}catch(e){return true}};
+let awT=0,awK=0;
+const cur=()=>(vi<0?H.length:vi)-1;
+function schedAW(){clearTimeout(awT);const k=++awK;if(document.body.dataset.tab!=='review'||!awOn()||AZ)return;awT=setTimeout(()=>runAW(k),450)}
+async function runAW(k){
+ const i=cur();if(i<0||TS||AZ||!RV[i]||!H[i]||!ML[i]||!window.WHYR)return;
+ const e=RV[i];if(e.k==='forced'||e.k==='book')return;
+ if(hn.querySelector('.aw')||hn.querySelector('[onclick="WHYB()"]'))return;
+ const pr=H[i],m=fromTok(pr,ML[i]);if(!m)return;
+ const sg=pr.t==='w'?1:-1,loss=e.bs!=null&&EV[i]!=null?Math.max(0,e.bs-sg*EV[i]):0,bm=e.bm?fromTok(pr,e.bm):null;
+ let h;try{h=await WHYR(pr,m,e.k,bm,e.bs,loss,{ix:i})}catch(x){return}
+ if(k!==awK||cur()!==i||TS||hn.querySelector('.aw')||hn.querySelector('[onclick="WHYB()"]'))return;
+ const d=document.createElement('div');d.innerHTML=h;const li=[...d.querySelectorAll('li')].slice(0,2);if(!li.length)return;
+ const w=document.createElement('div');w.className='aw';w.innerHTML='<ul style="list-style:none;padding:0">'+li.map(x=>'<li style="margin:3px 0">'+x.innerHTML+'</li>').join('')+'</ul>';
+ hn.insertBefore(w,hn.querySelector('.bt')||null)}
+{const _g=go;go=function(){const r=_g.apply(this,arguments);try{schedAW()}catch(e){}return r}}
+{const _t=UI.tab;UI.tab=function(n){const r=_t.apply(this,arguments);try{lblAW();if(n==='review')schedAW()}catch(e){}return r}}
+/* toggle lives in More > Look & analysis */
+const awb=document.createElement('button');awb.style.cssText='width:100%;margin:5px 0';
+function lblAW(){awb.textContent=(awOn()?'\u2705 ':'\u2B1C ')+L('Coach explains each move in Review','\u0627\u0644\u0645\u062F\u0631\u0628 \u064A\u0634\u0631\u062D \u0643\u0644 \u0646\u0642\u0644\u0629 \u0641\u064A \u0627\u0644\u0645\u0631\u0627\u062C\u0639\u0629')}
+awb.onclick=()=>{try{localStorage.setItem('chessAutoWhy',awOn()?'0':'1')}catch(e){}lblAW();schedAW()};
+{const cds=document.querySelectorAll('.sec[data-s=more] .cd');if(cds[1])cds[1].appendChild(awb)}
+lblAW();TRSYNC();
 })();
 </script>
 </body></html>
