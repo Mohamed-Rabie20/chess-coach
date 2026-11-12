@@ -30,6 +30,7 @@ tests/                Playwright tests + a mock UCI engine (see below)
 ```
 
 Add new code as a new file in `js/` (or edit the matching one) and, if it is a new file, add its `<script>` tag to `index.html`.
+**Flat layout (no folders)**: all css/js files can also sit next to `index.html` (the `<script src>` / `<link href>` paths then have no `js/` / `css/` prefix). The workflow copies them from the repo root.
 The old single-file layout still builds: if only `index.html` is in the repo (a bundled one) the workflow copies just that.
 
 ## Tests (need `pip install playwright && playwright install chromium`)
@@ -37,6 +38,7 @@ The old single-file layout still builds: if only `index.html` is in the repo (a 
 ```
 python3 tests/suite.py   $PWD/index.html     # rules (perft), draws, tabs, Train, mistakes, report
 python3 tests/toggle.py  $PWD/index.html     # live analysis on/off
+python3 tests/trynav.py  $PWD/index.html     # tried moves: ◀ ▶ walk through them, arrows, coach bubble height
 python3 tests/speed.py 300                   # analysis speed with a simulated engine (300 ms per search)
 python3 tools/bundle.py && python3 tests/suite.py $PWD/dist/index.html
 ```

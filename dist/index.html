@@ -160,8 +160,8 @@ body[data-tab=play] #ml::-webkit-scrollbar{display:none}
 #cav{flex:0 0 42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:23px;background:linear-gradient(145deg,#3dbb7e,#2a8a5a);box-shadow:0 2px 8px rgba(0,0,0,.25);margin-top:4px}
 #cbb{position:relative;flex:1;min-width:0;background:var(--card);border:1px solid var(--ln);box-shadow:var(--sh);border-radius:16px;padding:9px 12px;margin-left:4px}
 #cbb::before{content:"";position:absolute;left:-7px;top:16px;width:12px;height:12px;background:var(--card);border-left:1px solid var(--ln);border-bottom:1px solid var(--ln);transform:rotate(45deg)}
-#cbb #hn{background:none;border:0;box-shadow:none;padding:0;border-radius:0;min-height:38px;max-height:150px;overflow:auto;font-size:14px;line-height:1.5;-webkit-overflow-scrolling:touch}
-#cbb.big #hn{max-height:44vh}
+#cbb #hn{background:none;border:0;box-shadow:none;padding:0;border-radius:0;height:100px;max-height:100px;overflow:auto;font-size:14px;line-height:1.5;-webkit-overflow-scrolling:touch}
+#cbb.big #hn{height:auto;max-height:44vh}
 #cbb.ov{padding-right:38px}
 #cbt{position:absolute;top:5px;right:5px;width:28px;height:28px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;border:0;background:rgba(128,128,128,.2);color:var(--tx)}
 #cbb:not(.ov) #cbt{display:none}
@@ -176,6 +176,9 @@ body[data-tab=train] #cbx,body[data-tab=train] #st,body[data-tab=train] #op,body
 body.noan[data-tab=play] #eb,body.noan[data-tab=play] .bdg,body.noan[data-tab=play] #ml sup{display:none}
 #anb{padding:10px 12px}
 #anb:not(.p){opacity:.85}
+
+/* nothing above the board changes height while you play */
+#st,#op{min-height:1.3em}
 </style>
 
 
@@ -412,7 +415,7 @@ function maybeCpu(after){if(!cfg.vs||over||S.t!==cpuSide()){if(after)after();ret
 let RV=[],EV=[],vi=-1,PM=null,PSC=null,SO=true,AC=null,SCk='',SCa=[];
 const TC=[[0,0],[60,0],[180,0],[300,0],[600,0],[900,10]],tcs=()=>TC[cfg.tc||0];
 let RT=800,ARCH=[],GD=false,RDm='';try{RT=+localStorage.getItem('chessRating')||800;ARCH=JSON.parse(localStorage.getItem('chessArch')||'[]')}catch(e){}
-var TS=null,TL=null,TA=null,TST=[],TTK=0,TTO=null;let PRE=null,CK={w:0,b:0},END='',LT=Date.now(),DG=null,SUP=0;
+var TS=null,TL=null,TA=null,TST=[],TTK=0,TTO=null,TLN=[],TIX=0,TAN=-1;let PRE=null,CK={w:0,b:0},END='',LT=Date.now(),DG=null,SUP=0;
 const BOTS=[{n:'Pip',e:250,a:'🐣',q:'I just learned how the pieces move!'},{n:'Tobi',e:400,a:'🧸',q:'I love capturing stuff. Good luck!'},{n:'Lina',e:600,a:'🌱',q:'I know a few opening ideas.'},{n:'Omar',e:800,a:'🐢',q:'Slow and steady wins the race.'},{n:'Sara',e:1000,a:'🎈',q:'Let’s have a friendly game.'},{n:'Karim',e:1200,a:'🦊',q:'I watch out for tactics.'},{n:'Nora',e:1400,a:'🦉',q:'I calculate a few moves ahead.'},{n:'Yusuf',e:1600,a:'🐺',q:'Don’t leave pieces hanging!'},{n:'Hana',e:1800,a:'🦅',q:'I punish every mistake.'},{n:'Viktor',e:2000,a:'🐻',q:'Prepare for a long fight.'},{n:'Elena',e:2200,a:'🐉',q:'Master level. Show me your best.'},{n:'Atlas',e:2500,a:'🦾',q:'Grandmaster strength.'},{n:'Max',e:3000,a:'🤖',q:'Full-strength engine. Good luck.'}];
 const bot=()=>BOTS[cfg.lv]||BOTS[5],botTxt=()=>{const b=bot();return b.a+' '+b.n+' ('+b.e+'): “'+b.q+'”'};
 let CH=true,HC=null,LS=0;
@@ -508,15 +511,31 @@ document.addEventListener('pointerup',dEnd);document.addEventListener('pointerca
 function tryClick(i){const b=TS||[...H,S][vi],lm=legal(b),mv=sel>=0?lm.filter(m=>m.f===sel&&m.t===i):[];if(mv.length){tryPlay(b,mv.find(x=>x.pr==='q')||mv[0]);return}const p=b.b[i];if(p&&(p<'a')===(b.t==='w')&&lm.some(m=>m.f===i))sel=sel===i?-1:i;else sel=-1;R()}
 async function tryRate(b,m,line){const nn=apply(b,m),nl=legal(b).length,r=nl===1?{m,sc:0}:await engC(b,1000,6),bm=r.m,same=nl===1||(bm.f===m.f&&bm.t===m.t);let loss=0;if(!same){const v=await evAfter(nn);loss=Math.max(0,r.sc+v.sc)}if(!legal(nn).length&&inChk(nn))loss=0;
  const wd=Math.max(0,WP(r.sc)-WP(r.sc-loss)),bk=isBook(line);let k;if(nl===1)k='forced';else if(bk)k='book';else if(same||wd<=.1)k='best';else if(wd<=2)k='excellent';else if(wd<=5)k='good';else if(wd<=10)k='inacc';else if(wd<=20)k='mistake';else k='blunder';return{k,loss,bm,nn,wd,sc:nl===1?null:r.sc}}
-async function tryPlay(b,m){try{snd(mvKey(b,m,apply(b,m),false))}catch(e){}const id=++TTK,first=!TST.length,played=first&&ML[vi]?sans()[vi]:'';TST.push({s:TS,l:TL,o:TTO});TTO=(TTO||ML.slice(0,vi)).concat([tok(m)]);sel=-1;TS=apply(b,m);TL=tok(m);TA=null;BD=null;try{snd(b.b[m.t]?'x':'m')}catch(e){}R();$('hn').innerHTML='<div class="mu">Checking your move...</div>';
- const x=await tryRate(b,m,TTO);if(id!==TTK)return;const t=RTG[x.k],bad=['good','inacc','mistake','miss','blunder'].includes(x.k);BD={sq:m.t,sym:t[0],col:t[2]};TA=bad?{f:x.bm.f,t:x.bm.t}:null;
+async function tryPlay(b,m){try{snd(mvKey(b,m,apply(b,m),false))}catch(e){}const id=++TTK,first=!TST.length,played=first&&ML[vi]?sans()[vi]:'';TST.push({s:TS,l:TL,o:TTO});TTO=(TTO||ML.slice(0,vi)).concat([tok(m)]);sel=-1;TS=apply(b,m);TL=tok(m);TA=null;BD=null;hint=null;if(TIX<TLN.length)TLN.length=TIX;TLN.push({s:TS,l:TL,o:TTO,b,m,played,card:null});TIX=TLN.length;TAN=vi;const ix=TIX;try{snd(b.b[m.t]?'x':'m')}catch(e){}R();$('hn').innerHTML='<div class="mu">Checking your move...</div>';
+ const x=await tryRate(b,m,TTO);tryCard(b,m,x,played,ix,id===TTK)}
+/* build the rating card of a tried move; show=false only stores it (you already moved on) so ◀ ▶ can bring it back */
+function tryCard(b,m,x,played,ix,show){const t=RTG[x.k],bad=['good','inacc','mistake','miss','blunder'].includes(x.k),bd={sq:m.t,sym:t[0],col:t[2]},ta=bad?{f:x.bm.f,t:x.bm.t}:null;
  let h='<span style="background:'+t[2]+';color:#fff;padding:2px 9px;border-radius:12px;font-weight:700">'+t[0]+' '+t[1]+'</span> '+t[3];if(bad)h+='<div style="margin-top:6px">Better was: <b>'+san(b,x.bm)+'</b> <span class="mu">(blue arrow)</span></div>';if(x.loss>=30)h+='<div class="mu">'+(x.loss>5000?'Lets the opponent force a mate':'Cost: about '+(x.loss/100).toFixed(1)+' pawns (win chance -'+x.wd.toFixed(0)+'%)')+'</div>';
  if(!legal(x.nn).length)h+='<div style="margin-top:6px"><b>'+(inChk(x.nn)?'Checkmate!':'Stalemate')+'</b></div>';if(played)h+='<div class="mu" style="margin-top:6px">In the game: <b>'+played+'</b></div>';
- window.TW={b,m,k:x.k,bm:x.bm,loss:x.loss,bs:x.sc};h+='<div class="bt" style="margin-top:8px"><button onclick="WHYT()">💡 Why?</button><button onclick="tryBack()">Take back</button><button onclick="go(1e9)">Back to game</button></div>';$('hn').innerHTML=h;R()}
-function tryBack(){const p=TST.pop();if(!p)return;if(!TST.length){go(vi);return}TTK++;TS=p.s;TL=p.l;TTO=p.o;TA=null;BD=null;sel=-1;$('hn').innerHTML='<div class="mu">Move taken back. Try another move.</div><div class="bt"><button onclick="tryBack()">Take back</button><button onclick="go(1e9)">Back to game</button></div>';R()}
-function go(t){TS=null;TL=null;TA=null;TST=[];TTO=null;TTK++;const n=H.length;t=Math.max(0,Math.min(n,t));try{if(TS||t!==(vi<0?n:vi))reviewSnd(t,n)}catch(e){}vi=t===n?-1:t;hint=null;sel=-1;$('pm').style.display='none';const e=RV[t-1];BD=e?{sq:e.sq,sym:RTG[e.k][0],col:RTG[e.k][2]}:null;$('hn').innerHTML=e?e.h+(window.whyBtn?whyBtn(t-1):''):t===0?'Start position.':'';setBar(EV[t-1]??0);upd()}
+ const tw={b,m,k:x.k,bm:x.bm,loss:x.loss,bs:x.sc};h+='<div class="bt" style="margin-top:8px"><button onclick="WHYT()">💡 Why?</button><button onclick="tryBack()">Take back</button><button onclick="go(1e9)">Back to game</button></div>';
+ if(TLN[ix-1])TLN[ix-1].card={h,bd,ta,tw};
+ if(show){BD=bd;TA=ta;window.TW=tw;$('hn').innerHTML=h;R()}}
+function tryBack(){const p=TST.pop();if(!p)return;if(!TST.length){go(vi);return}TLN.pop();TIX=TLN.length;TTK++;TS=p.s;TL=p.l;TTO=p.o;TA=null;BD=null;hint=null;sel=-1;$('hn').innerHTML='<div class="mu">Move taken back. Try another move.</div><div class="bt"><button onclick="tryBack()">Take back</button><button onclick="go(1e9)">Back to game</button></div>';R()}
+function go(t){TS=null;TL=null;TA=null;TST=[];TTO=null;TLN=[];TIX=0;TAN=-1;TTK++;const n=H.length;t=Math.max(0,Math.min(n,t));try{if(TS||t!==(vi<0?n:vi))reviewSnd(t,n)}catch(e){}vi=t===n?-1:t;hint=null;sel=-1;$('pm').style.display='none';const e=RV[t-1];BD=e?{sq:e.sq,sym:RTG[e.k][0],col:RTG[e.k][2]}:null;$('hn').innerHTML=e?e.h+(window.whyBtn?whyBtn(t-1):''):t===0?'Start position.':'';setBar(EV[t-1]??0);upd()}
 function lastBar(){let v=0;for(let i=EV.length-1;i>=0;i--)if(EV[i]!=null){v=EV[i];break}setBar(v)}
-const nav=d=>go((vi<0?H.length:vi)+d);
+/* step to depth k (0 = the game position the line started from) of the tried-moves line */
+function tryStep(k){TTK++;k=Math.max(0,Math.min(TLN.length,k));
+ if(k===0){const L=TLN,a=TAN;go(a);TLN=L;TAN=a;TIX=0;return}
+ const n=TLN[k-1];TS=n.s;TL=n.l;TTO=n.o;TIX=k;TST=[{s:null,l:null,o:null}];for(let j=2;j<=k;j++){const q=TLN[j-2];TST.push({s:q.s,l:q.l,o:q.o})}
+ sel=-1;hint=null;$('pm').style.display='none';
+ if(n.card){$('hn').innerHTML=n.card.h;BD=n.card.bd;TA=n.card.ta;window.TW=n.card.tw}else{$('hn').innerHTML='<div class="mu">Checking your move...</div>';BD=null;TA=null;const id=TTK;tryRate(n.b,n.m,n.o).then(x=>{if(id===TTK)tryCard(n.b,n.m,x,n.played,k,true)}).catch(()=>{})}
+ try{snd('m')}catch(e){}R()}
+function nav(d){const cur=vi<0?H.length:vi;
+ if(TLN.length&&(TS||TAN===vi)){
+  if(d<0){if(TS)tryStep(TIX-1);else go(cur-1)}
+  else{if(TIX<TLN.length)tryStep(TIX+1)}
+  return}
+ go(cur+d)}
 document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')nav(-1);if(e.key==='ArrowRight')nav(1)});
 const WP=c=>50+50*(2/(1+Math.exp(-alK()*c))-1);
 /* accuracy: volatility-weighted mean blended with harmonic mean (punishes blunders; forced moves ignored) */
