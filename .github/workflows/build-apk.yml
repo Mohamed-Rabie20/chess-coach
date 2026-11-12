@@ -12,6 +12,8 @@ on:
   push:
     paths:
       - index.html
+      - css/**
+      - js/**
       - slice.csv
       - icon.png
       - sounds/**
@@ -43,6 +45,8 @@ jobs:
         run: |
           mkdir -p www/engine
           cp index.html www/index.html
+          if [ -d css ]; then cp -r css www/css; fi
+          if [ -d js ]; then cp -r js www/js; fi
           if [ -f slice.csv ]; then cp slice.csv www/slice.csv; fi
           mkdir -p www/sounds
           if [ -d sounds ]; then cp -r sounds/. www/sounds/; fi
