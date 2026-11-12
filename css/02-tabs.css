@@ -1,0 +1,29 @@
+/* ===== v10: tabbed layout (Play / Review / Train / More) + New game sheet ===== */
+body{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+.sec{display:none}
+.rw{flex-wrap:wrap;gap:8px;margin:10px 0}.rw button{flex:1 1 auto}
+body[data-tab=play] .sec[data-s=hint],body[data-tab=play] .sec[data-s=play],
+body[data-tab=review] .sec[data-s=hint],body[data-tab=review] .sec[data-s=nav],body[data-tab=review] .sec[data-s=act]{display:flex}
+body[data-tab=more] .sec[data-s=more]{display:block}
+.sec[data-s=hint] button{padding:14px 8px;font-size:16px}
+.sec[data-s=play] button{flex:1 1 30%;padding:11px 6px;white-space:nowrap}
+.sec[data-s=nav] button{flex:1;padding:13px 0;font-size:18px}
+body[data-tab=more] #hn,body[data-tab=more] #ml{display:none}
+body[data-tab=train] #ml{display:none}
+body[data-tab=play] #ml{max-height:96px}
+@media (max-width:979px){body[data-tab=more] #bcol{display:none}}
+.cd{background:var(--card);border:1px solid var(--ln);box-shadow:var(--sh);border-radius:14px;padding:12px 14px;margin:10px 0}
+.cd>b{display:block;margin-bottom:8px}
+.cd .rw{margin:6px 0}
+.cd select{width:100%;box-sizing:border-box;margin:5px 0}
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:2px;background:var(--card);border-top:1px solid var(--ln);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.18)}
+#tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:0;box-shadow:none;background:none;color:var(--mu);font-size:11px;font-weight:600;border-radius:10px}
+#tabs button .ic{font-size:21px;line-height:1.1}
+#tabs button.on{color:var(--ac);background:rgba(61,187,126,.12)}
+#ngs{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center}
+#ngs.on{display:flex}
+#ngs .sheet{width:min(100%,480px);box-sizing:border-box;background:var(--card);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow:auto}
+#ngs h3{margin:0 0 10px;font-size:19px}
+#ngs select{width:100%;box-sizing:border-box;margin:5px 0;padding:13px 12px}
+#ngs .st{width:100%;margin-top:12px;padding:15px;font-size:18px}
+#ngs .cn{width:100%;margin-top:8px;background:none;box-shadow:none}

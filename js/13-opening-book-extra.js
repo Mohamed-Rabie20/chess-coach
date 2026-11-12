@@ -1,0 +1,26 @@
+/* v5: bigger opening book + the engine plays book moves at the start (instant, no search) */
+OP.push(...[
+'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6|Sicilian: Najdorf',
+'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 d7d6|Sicilian: Classical',
+'e2e4 c7c5 g1f3 e7e6 d2d4 c5d4 f3d4 a7a6|Sicilian: Kan',
+'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6|French: Classical',
+'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4|French: Winawer',
+'e2e4 e7e6 d2d4 d7d5 e4e5|French: Advance',
+'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4|Caro-Kann: Classical',
+'e2e4 c7c6 d2d4 d7d5 e4e5 c8f5|Caro-Kann: Advance',
+'e2e4 d7d5 e4d5 d8d5 b1c3 d5a5|Scandinavian Defense',
+'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6|Pirc Defense',
+'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7|Ruy Lopez: Closed',
+'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3 g8f6 d2d4|Giuoco Piano',
+'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4|Scotch Game',
+'d2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5|Queen’s Gambit Declined',
+'d2d4 d7d5 c2c4 d5c4|Queen’s Gambit Accepted',
+'d2d4 d7d5 c2c4 c7c6|Slav Defense',
+'d2d4 g8f6 c2c4 e7e6 b1c3 f8b4|Nimzo-Indian Defense',
+'d2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6|King’s Indian Defense',
+'d2d4 g8f6 c2c4 e7e6 g1f3 b7b6|Queen’s Indian Defense',
+'d2d4 g8f6 c2c4 g7g6 b1c3 d7d5|Grünfeld Defense',
+'d2d4 d7d5 c1f4|London System',
+'c2c4 e7e5 b1c3|English: Reversed Sicilian',
+'g1f3 d7d5 c2c4|Réti: Queen’s Gambit Reversed'].map(x=>x.split('|')));
+{const _p=pick;pick=async function(){try{const e=bot().e;if(ML.length<12){const ch=ML.length<8?.92:.6;if(Math.random()<ch){const bk=bookMove(S,true);if(bk){PSC=null;return bk}}}}catch(x){}return _p()}}

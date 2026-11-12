@@ -1,0 +1,26 @@
+/* ===== v11: coach bubble above the board, Review-only report, moves strip + arrows in Play, Train uses the main board ===== */
+#pcol{display:flex;flex-direction:column}
+#pcol>.sec[data-s=nav]{order:1}#pcol>#ml{order:2}#pcol>.sec[data-s=hint]{order:3}#pcol>.sec[data-s=play]{order:4}#pcol>.sec[data-s=act]{order:5}#pcol>#trp{order:6}#pcol>#rpt{order:7}#pcol>.sec[data-s=more]{order:8}
+body[data-tab=play] .sec[data-s=nav]{display:flex}
+body[data-tab=play] #ml{white-space:nowrap;overflow-x:auto;overflow-y:hidden;max-height:none;padding:8px 10px;margin-top:0;scrollbar-width:none}
+body[data-tab=play] #ml::-webkit-scrollbar{display:none}
+#cbx{direction:ltr;display:flex;align-items:flex-start;gap:10px;margin:6px 0 10px}
+#cav{flex:0 0 42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:23px;background:linear-gradient(145deg,#3dbb7e,#2a8a5a);box-shadow:0 2px 8px rgba(0,0,0,.25);margin-top:4px}
+#cbb{position:relative;flex:1;min-width:0;background:var(--card);border:1px solid var(--ln);box-shadow:var(--sh);border-radius:16px;padding:9px 12px;margin-left:4px}
+#cbb::before{content:"";position:absolute;left:-7px;top:16px;width:12px;height:12px;background:var(--card);border-left:1px solid var(--ln);border-bottom:1px solid var(--ln);transform:rotate(45deg)}
+#cbb #hn{background:none;border:0;box-shadow:none;padding:0;border-radius:0;min-height:38px;max-height:150px;overflow:auto;font-size:14px;line-height:1.5;-webkit-overflow-scrolling:touch}
+#cbb.big #hn{max-height:44vh}
+#cbb.ov{padding-right:38px}
+#cbt{position:absolute;top:5px;right:5px;width:28px;height:28px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;border:0;background:rgba(128,128,128,.2);color:var(--tx)}
+#cbb:not(.ov) #cbt{display:none}
+#cbb .aw{margin-top:6px;padding-top:6px;border-top:1px dashed var(--ln)}
+#cbb .aw ul{margin:0}
+#rpt{display:none;background:var(--card);border:1px solid var(--ln);box-shadow:var(--sh);border-radius:14px;padding:12px 14px;margin:10px 0}
+body[data-tab=review] #rpt:not(:empty){display:block}
+body[data-tab=train] #cbx,body[data-tab=train] #st,body[data-tab=train] #op,body[data-tab=train] #eb,body[data-tab=train] #pt,body[data-tab=train] #pbm{display:none}
+@media (max-width:979px){body.nobd #bcol{display:none}h1{margin:0 0 4px;font-size:17px}h1 img{width:28px;height:28px}#st{margin:4px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#op{margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#eb{margin:4px 0!important}#cbx{margin:4px 0 8px}}
+
+/* live analysis off: no evaluation bar, rating badges or marks while playing */
+body.noan[data-tab=play] #eb,body.noan[data-tab=play] .bdg,body.noan[data-tab=play] #ml sup{display:none}
+#anb{padding:10px 12px}
+#anb:not(.p){opacity:.85}

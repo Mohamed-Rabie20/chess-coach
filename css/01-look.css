@@ -1,0 +1,30 @@
+/* ===== v2 look: navy + gold, smoother controls, branded header ===== */
+:root{--gd:#e2b659;--ln:rgba(0,0,0,.09);--sh:0 6px 20px rgba(20,30,50,.10);--bg:#eef1f7;--card:#fff;--mu:#5d6a82}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1220;--card:#131c30;--tx:#e9eef8;--mu:#8e9bb5;--ac:#3dbb7e;--ln:rgba(255,255,255,.07);--sh:0 8px 24px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#0b1220;--card:#131c30;--tx:#e9eef8;--mu:#8e9bb5;--ac:#3dbb7e;--ln:rgba(255,255,255,.07);--sh:0 8px 24px rgba(0,0,0,.35)}
+body{background-image:radial-gradient(120% 55% at 50% -8%,rgba(226,182,89,.13),transparent 62%);background-repeat:no-repeat;min-height:100vh;-webkit-tap-highlight-color:transparent}
+h1.hd{display:flex;align-items:center;gap:11px;margin:2px 0 10px;font-size:23px;letter-spacing:.2px}
+h1.hd .lg{width:42px;height:42px;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+h1.hd span{background:linear-gradient(90deg,#f6dc95,#e2b659 55%,#c98f2a);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+#st{font-size:16px;font-weight:700}
+#eb{height:16px!important;border-radius:8px!important;box-shadow:inset 0 0 0 1px var(--ln)}
+#bd{border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.4),0 0 0 1px var(--ln)}
+.sel{box-shadow:inset 0 0 0 4px var(--gd)}
+.mv::after{width:28%;height:28%;background:rgba(0,0,0,.2)}
+.cap{box-shadow:inset 0 0 0 4px rgba(214,70,70,.75)}
+.pl{box-sizing:border-box;padding:6px 10px;border-radius:12px;background:var(--card);border:1px solid var(--ln)}
+button,select{font-size:15px;padding:11px 14px;border-radius:12px;border:1px solid var(--ln);background:var(--card);color:var(--tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 6px rgba(0,0,0,.16);transition:transform .08s,filter .15s}
+button:active{transform:scale(.96);filter:brightness(1.12)}
+button.p{background:linear-gradient(180deg,#46c987,#2f9a63);border-color:#2a8657;color:#fff;font-weight:700;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+#pcol>.bt:first-child{display:grid;grid-template-columns:repeat(6,1fr)}
+#pcol>.bt:first-child button{grid-column:span 2;padding:11px 4px;white-space:nowrap}
+#pcol>.bt:first-child button.p,#pcol>.bt:first-child button:nth-last-child(-n+2){grid-column:span 3}
+#hn,#ml,#set{border:1px solid var(--ln);box-shadow:var(--sh)}
+#ml{max-height:150px;overflow:auto}
+.gp{position:absolute;width:12.5%;height:12.5%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;line-height:1;font-family:inherit}
+.ghost{color:transparent!important;text-shadow:none!important}
+#sp{position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(90% 60% at 50% 38%,#16223d,#0b1220 70%);animation:spOut .55s ease 1.05s forwards;pointer-events:none}
+#sp img{width:132px;height:132px;border-radius:30px;box-shadow:0 14px 40px rgba(0,0,0,.55);animation:spIn .7s cubic-bezier(.2,.9,.3,1.2)}
+#sp b{font:800 26px system-ui,sans-serif;letter-spacing:.5px;background:linear-gradient(90deg,#f6dc95,#e2b659 55%,#c98f2a);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes spIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes spOut{to{opacity:0;visibility:hidden}}
