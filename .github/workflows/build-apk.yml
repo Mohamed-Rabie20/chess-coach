@@ -14,6 +14,8 @@ on:
       - index.html
       - css/**
       - js/**
+      - "*.js"
+      - "*.css"
       - slice.csv
       - icon.png
       - sounds/**
@@ -47,6 +49,7 @@ jobs:
           cp index.html www/index.html
           if [ -d css ]; then cp -r css www/css; fi
           if [ -d js ]; then cp -r js www/js; fi
+          for f in *.css *.js; do if [ -f "$f" ]; then cp "$f" www/; fi; done
           if [ -f slice.csv ]; then cp slice.csv www/slice.csv; fi
           mkdir -p www/sounds
           if [ -d sounds ]; then cp -r sounds/. www/sounds/; fi
