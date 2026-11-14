@@ -23,6 +23,8 @@ js/                   loaded in file-name order (classic scripts sharing one glo
   20-tabs             bottom tab bar (Play / Review / Train / More)
   21-coach-ui         coach bubble, live-analysis switch, Train-on-main-board glue
   22-analysis-speed   parallel Stockfish workers for game analysis
+  23-backup           More > Backup: copy / restore all app data
+SIGNING.md            how to keep one signing key (APK updates install over the old app)
 engine/config.js      written by the GitHub workflow (which Stockfish build is bundled)
 tools/bundle.py       inlines everything into dist/index.html (one file)
 tests/                Playwright tests + a mock UCI engine (see below)
@@ -39,6 +41,7 @@ The old single-file layout still builds: if only `index.html` is in the repo (a 
 python3 tests/suite.py   $PWD/index.html     # rules (perft), draws, tabs, Train, mistakes, report
 python3 tests/toggle.py  $PWD/index.html     # live analysis on/off
 python3 tests/trynav.py  $PWD/index.html     # tried moves: ◀ ▶ walk through them, arrows, coach bubble height
+python3 tests/backup.py  $PWD/index.html     # backup / restore
 python3 tests/playbar.py $PWD/index.html     # Play action row (Undo · Best · Coach · analysis · ⋯), options, tab layouts
 python3 tests/speed.py 300                   # analysis speed with a simulated engine (300 ms per search)
 python3 tools/bundle.py && python3 tests/suite.py $PWD/dist/index.html

@@ -36,17 +36,17 @@ body[data-tab=play].opts .sec[data-s=play]{display:flex}
 body.opts .sec[data-s=qa] #qo{background:var(--ac,#2f9e5b);color:#fff}
 body.noan[data-tab=play] .sec[data-s=qa]{gap:8px}
 /* coach bubble: compact, the "Why?" chip always visible at its bottom */
-#cbb #hn{height:74px;max-height:74px}
+#cbb #hn{height:64px;max-height:64px}
 #cbb #hn .bt{position:sticky;bottom:0;background:var(--card);margin:4px 0 0;padding:4px 0 0;justify-content:flex-start;gap:6px}
 #cbb #hn .bt button{flex:0 0 auto;width:auto;padding:5px 12px;font-size:13px;min-height:0}
 /* more room for the board on phones */
 @media (max-width:979px){body[data-tab=play] h1,body[data-tab=review] h1,body[data-tab=train] h1{display:none}}
 
 /* order of the blocks under the board, per tab */
-body[data-tab=play] #pcol>.sec[data-s=nav]{order:1}
-body[data-tab=play] #pcol>#ml{order:2}
-body[data-tab=play] #pcol>.sec[data-s=qa]{order:3}
-body[data-tab=play] #pcol>.sec[data-s=play]{order:4}
+body[data-tab=play] #pcol>.sec[data-s=nav]{order:3}
+body[data-tab=play] #pcol>#ml{order:4}
+body[data-tab=play] #pcol>.sec[data-s=qa]{order:1}
+body[data-tab=play] #pcol>.sec[data-s=play]{order:2}
 body[data-tab=review] #pcol>.sec[data-s=nav]{order:1}
 body[data-tab=review] #pcol>.sec[data-s=act]{order:2}
 body[data-tab=review] #pcol>.sec[data-s=hint]{order:3}
@@ -57,5 +57,5 @@ body[data-tab=review] #pcol>#ml{order:4}
 body[data-tab=play] #pcol>.sec,body[data-tab=play] #pcol>#ml,body[data-tab=review] #pcol>.sec{margin-top:6px;margin-bottom:0}
 .sec[data-s=nav] button{padding-top:9px;padding-bottom:9px}
 
-/* on shorter phones the board shrinks a little so the action row never slides under the tab bar */
-@media (max-width:979px){body[data-tab=play]{--W:max(240px,min(100vw - 24px,480px,100vh - 472px))}}
+
+body[data-tab=play] #ml:empty{display:none}
