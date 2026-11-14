@@ -121,6 +121,17 @@ jobs:
           done
           printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#0c1322</color>\n</resources>\n' > $RES/values/ic_launcher_background.xml
           find $RES -name 'ic_launcher*' | sort
+      - name: Fixed signing key (new APKs install over the old one and keep your games)
+        env:
+          KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            mkdir -p ~/.android
+            echo "$KS" | base64 -d > ~/.android/debug.keystore
+            echo "Using the fixed signing key from the DEBUG_KEYSTORE_B64 secret"
+          else
+            echo "No DEBUG_KEYSTORE_B64 secret: building with a temporary key (you may have to uninstall the old app before installing this one)"
+          fi
       - name: Build APK
         run: |
           cd android
