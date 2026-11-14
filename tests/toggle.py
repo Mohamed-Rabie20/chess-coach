@@ -11,13 +11,13 @@ with sync_playwright() as p:
     pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.goto(URL); pg.wait_for_timeout(2500)
     pg.evaluate("()=>{localStorage.removeItem('chessLiveAn');cfg.vs=0;newG()}")
-    check('switch exists in Play, default ON',pg.evaluate("()=>{const b=document.getElementById('anb');return !!b&&b.closest('.sec').dataset.s==='play'&&LIVEAN===1}"),pg.inner_text('#anb'))
+    check('switch exists in the Play action row, default ON',pg.evaluate("()=>{const b=document.getElementById('anb');return !!b&&b.closest('.sec').dataset.s==='qa'&&LIVEAN===1}"),pg.inner_text('#anb'))
     # ON: moves get rated
     pg.evaluate(PLAY,['e2e4',False]); pg.wait_for_timeout(2500)
     check('ON: move is rated live',pg.evaluate("()=>RV.filter(Boolean).length")>=1)
     # turn OFF
     pg.click('#anb'); pg.wait_for_timeout(200)
-    check('OFF: label + body class',pg.evaluate("()=>document.body.classList.contains('noan')") and 'OFF' in pg.inner_text('#anb'),pg.inner_text('#anb'))
+    check('OFF: label + body class',pg.evaluate("()=>document.body.classList.contains('noan')") and 'Off' in pg.inner_text('#anb'),pg.inner_text('#anb'))
     pg.evaluate("()=>{cfg.vs=0;newG()}")
     for m in ['e2e4','e7e5','g1f3','b8c6','f1b5']: pg.evaluate(PLAY,[m,False]); pg.wait_for_timeout(700)
     pg.wait_for_timeout(2500)

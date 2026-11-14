@@ -60,16 +60,27 @@ awb.onclick=()=>{try{localStorage.setItem('chessAutoWhy',awOn()?'0':'1')}catch(e
 {const cds=document.querySelectorAll('.sec[data-s=more] .cd');if(cds[1])cds[1].appendChild(awb)}
 lblAW();TRSYNC();
 
-/* ---- live analysis on/off (Play): when off, nothing tells you whether a move was good; analyse the game later in Review ---- */
+/* ---- Play controls: one row under the board (Undo · Best · Coach · live analysis · ⋯); Flip / New game / Resign / Draw sit behind ⋯ ---- */
 {const KEY='chessLiveAn',ar=()=>{try{return localStorage.getItem('chessLang')==='ar'}catch(e){return false}},L=(e,a)=>ar()?a:e;
  try{window.LIVEAN=localStorage.getItem(KEY)==='0'?0:1}catch(e){window.LIVEAN=1}
- const btn=document.createElement('button');btn.id='anb';btn.type='button';btn.style.cssText='flex:1 1 100%';
+ const play=document.querySelector('.sec[data-s=play]'),hintSec=document.querySelector('.sec[data-s=hint]');
+ const find=(root,k)=>root?[...root.querySelectorAll('button')].find(b=>(b.getAttribute('onclick')||'').includes(k)):null;
+ const undoB=find(play,'undo('),bestB=find(hintSec,'doHint'),coachB=find(hintSec,'coachHint');
+ const qa=document.createElement('div');qa.className='sec rw';qa.dataset.s='qa';
+ const mkb=(id,cls)=>{const b=document.createElement('button');b.type='button';b.id=id;b.className=cls||'';return b};
+ const bU=mkb('qu'),bB=mkb('qb','qh'),bC=mkb('qc','qh'),bA=mkb('anb'),bO=mkb('qo');
+ bU.onclick=()=>undoB&&undoB.click();bB.onclick=()=>bestB&&bestB.click();bC.onclick=()=>coachB&&coachB.click();
  const msg=()=>L('Analysis is off — play freely. You can analyse the game later in Review.','التحليل متوقف — العب براحتك. تقدر تحلل الجيم بعدين من تبويب المراجعة.');
- const paint=()=>{document.body.classList.toggle('noan',!LIVEAN);btn.textContent=(LIVEAN?'🧠 ':'🚫 ')+L('Live analysis: ','التحليل المباشر: ')+(LIVEAN?L('ON','يعمل'):L('OFF','متوقف'));btn.classList.toggle('p',!!LIVEAN)};
+ const paint=()=>{document.body.classList.toggle('noan',!LIVEAN);
+  bU.textContent='↩ '+L('Undo','تراجع');bB.textContent='💡 '+L('Best','الأفضل');bC.textContent='🎓 '+L('Coach','المدرب');
+  bA.textContent=(LIVEAN?'🧠 ':'🚫 ')+(LIVEAN?L('On','يعمل'):L('Off','متوقف'));bA.title=L('Live analysis','التحليل المباشر');bA.classList.toggle('p',!!LIVEAN);
+  bO.textContent='⋯';bO.title=L('More actions','المزيد')};
  const set=v=>{LIVEAN=v?1:0;try{localStorage.setItem(KEY,v?'1':'0')}catch(e){}paint();if(!LIVEAN)hn.textContent=msg();else if(!ML.length)hn.textContent=L('Live analysis is on — I will rate your moves.','التحليل المباشر يعمل — هقيّم نقلاتك.')};
- btn.onclick=()=>set(!LIVEAN);
- const ps=document.querySelector('.sec[data-s=play]');if(ps)ps.insertBefore(btn,ps.firstChild);
+ bA.onclick=()=>set(!LIVEAN);
+ bO.onclick=()=>document.body.classList.toggle('opts');
+ [bU,bB,bC,bA,bO].forEach(b=>qa.appendChild(b));
+ if(play){play.parentNode.insertBefore(qa,play);play.addEventListener('click',e=>{if(e.target.closest('button'))setTimeout(()=>document.body.classList.remove('opts'),60)})}
  {const _n=newG;newG=function(){const r=_n.apply(this,arguments);if(!LIVEAN)hn.textContent=msg();return r}}
- {const _t=UI.tab;UI.tab=function(n){const r=_t.apply(this,arguments);try{paint()}catch(e){}return r}}
+ {const _t=UI.tab;UI.tab=function(n){const r=_t.apply(this,arguments);try{paint();document.body.classList.remove('opts')}catch(e){}return r}}
  paint();if(!LIVEAN&&!ML.length)hn.textContent=msg()}
 })();

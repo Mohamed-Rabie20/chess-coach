@@ -38,7 +38,7 @@ window.ANX=(()=>{
 {const cds=document.querySelectorAll('.sec[data-s=more] .cd');const c=cds[1];
  if(c){const ar=()=>{try{return localStorage.getItem('chessLang')==='ar'}catch(e){return false}};
   const sel=document.createElement('select');sel.id='aw';sel.style.cssText='width:100%;margin:5px 0';
-  const lab=()=>{[...sel.options].forEach(o=>{o.textContent=(o.value==='auto'?(ar()?'تلقائي':'Auto'):o.value)+(ar()?' — محركات التحليل':' analysis engines')});};
+  const lab=()=>{[...sel.options].forEach(o=>{o.textContent=(ar()?'محركات التحليل: ':'Analysis engines: ')+(o.value==='auto'?(ar()?'تلقائي':'Auto'):o.value)});};
   ['auto','1','2','3','4'].forEach(v=>{const o=document.createElement('option');o.value=v;sel.appendChild(o)});
   try{sel.value=localStorage.getItem('chessWorkers')||'auto'}catch(e){}lab();
   sel.onchange=()=>{try{localStorage.setItem('chessWorkers',sel.value)}catch(e){}};c.appendChild(sel)}}

@@ -173,12 +173,44 @@ body[data-tab=train] #cbx,body[data-tab=train] #st,body[data-tab=train] #op,body
 @media (max-width:979px){body.nobd #bcol{display:none}h1{margin:0 0 4px;font-size:17px}h1 img{width:28px;height:28px}#st{margin:4px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#op{margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#eb{margin:4px 0!important}#cbx{margin:4px 0 8px}}
 
 /* live analysis off: no evaluation bar, rating badges or marks while playing */
-body.noan[data-tab=play] #eb,body.noan[data-tab=play] .bdg,body.noan[data-tab=play] #ml sup{display:none}
-#anb{padding:10px 12px}
-#anb:not(.p){opacity:.85}
+body.noan[data-tab=play] #eb,body.noan[data-tab=play] .bdg,body.noan[data-tab=play] #ml sup,body.noan[data-tab=play] #qb,body.noan[data-tab=play] #qc{display:none}
 
 /* nothing above the board changes height while you play */
 #st,#op{min-height:1.3em}
+
+/* Play: a single row of the actions you use most, everything else behind the ⋯ button */
+.sec[data-s=qa]{display:none}
+body[data-tab=play] .sec[data-s=qa]{display:flex;flex-wrap:nowrap;gap:6px}
+body[data-tab=play] .sec[data-s=hint],body[data-tab=play] .sec[data-s=play]{display:none}
+body[data-tab=play].opts .sec[data-s=play]{display:flex}
+.sec[data-s=qa] button{flex:1 1 0;min-width:0;padding:11px 2px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec[data-s=qa] #qo{flex:0 0 46px;font-size:18px;font-weight:700}
+body.opts .sec[data-s=qa] #qo{background:var(--ac,#2f9e5b);color:#fff}
+body.noan[data-tab=play] .sec[data-s=qa]{gap:8px}
+/* coach bubble: compact, the "Why?" chip always visible at its bottom */
+#cbb #hn{height:74px;max-height:74px}
+#cbb #hn .bt{position:sticky;bottom:0;background:var(--card);margin:4px 0 0;padding:4px 0 0;justify-content:flex-start;gap:6px}
+#cbb #hn .bt button{flex:0 0 auto;width:auto;padding:5px 12px;font-size:13px;min-height:0}
+/* more room for the board on phones */
+@media (max-width:979px){body[data-tab=play] h1,body[data-tab=review] h1,body[data-tab=train] h1{display:none}}
+
+/* order of the blocks under the board, per tab */
+body[data-tab=play] #pcol>.sec[data-s=nav]{order:1}
+body[data-tab=play] #pcol>#ml{order:2}
+body[data-tab=play] #pcol>.sec[data-s=qa]{order:3}
+body[data-tab=play] #pcol>.sec[data-s=play]{order:4}
+body[data-tab=review] #pcol>.sec[data-s=nav]{order:1}
+body[data-tab=review] #pcol>.sec[data-s=act]{order:2}
+body[data-tab=review] #pcol>.sec[data-s=hint]{order:3}
+body[data-tab=review] #pcol>#ml{order:4}
+#cbx{margin:4px 0 6px}
+
+/* tighter spacing under the board so the action row is always on screen */
+body[data-tab=play] #pcol>.sec,body[data-tab=play] #pcol>#ml,body[data-tab=review] #pcol>.sec{margin-top:6px;margin-bottom:0}
+.sec[data-s=nav] button{padding-top:9px;padding-bottom:9px}
+
+/* on shorter phones the board shrinks a little so the action row never slides under the tab bar */
+@media (max-width:979px){body[data-tab=play]{--W:max(240px,min(100vw - 24px,480px,100vh - 472px))}}
 </style>
 
 
@@ -200,7 +232,7 @@ body.noan[data-tab=play] #eb,body.noan[data-tab=play] .bdg,body.noan[data-tab=pl
 <textarea id="px" rows="6" placeholder="Paste a PGN here, then press Load PGN" style="display:none;width:100%;box-sizing:border-box;margin-top:8px;border-radius:10px;padding:8px;background:var(--card);color:var(--tx);border:1px solid var(--mu);font:12px monospace"></textarea>
 <div id="pb2" class="bt" style="display:none"><button onclick="copyPGN()">📄 Copy</button><button onclick="annPGN()">🧠 Annotated</button><button onclick="logPGN()">🧪 Analysis log</button><button onclick="dlPGN()">⬇ Download</button><button onclick="loadPGN()">📥 Load PGN</button></div>
 <div id="ml"></div>
-<div class="mu">Games save automatically on this device. Every move you play is rated. Tap a move in the list (or use ◀ ▶ / arrow keys) to review it.</div>
+<div class="mu">Games save automatically on this device. While Live analysis is on, every move you play is rated. Tap a move in the list (or use ◀ ▶) to review it. The ⋯ button in Play holds Flip, New game, Resign and Draw.</div>
 </div></div>
 <script>
 const $=id=>document.getElementById(id),up=x=>x[0].toUpperCase()+x.slice(1);
@@ -5560,17 +5592,28 @@ awb.onclick=()=>{try{localStorage.setItem('chessAutoWhy',awOn()?'0':'1')}catch(e
 {const cds=document.querySelectorAll('.sec[data-s=more] .cd');if(cds[1])cds[1].appendChild(awb)}
 lblAW();TRSYNC();
 
-/* ---- live analysis on/off (Play): when off, nothing tells you whether a move was good; analyse the game later in Review ---- */
+/* ---- Play controls: one row under the board (Undo · Best · Coach · live analysis · ⋯); Flip / New game / Resign / Draw sit behind ⋯ ---- */
 {const KEY='chessLiveAn',ar=()=>{try{return localStorage.getItem('chessLang')==='ar'}catch(e){return false}},L=(e,a)=>ar()?a:e;
  try{window.LIVEAN=localStorage.getItem(KEY)==='0'?0:1}catch(e){window.LIVEAN=1}
- const btn=document.createElement('button');btn.id='anb';btn.type='button';btn.style.cssText='flex:1 1 100%';
+ const play=document.querySelector('.sec[data-s=play]'),hintSec=document.querySelector('.sec[data-s=hint]');
+ const find=(root,k)=>root?[...root.querySelectorAll('button')].find(b=>(b.getAttribute('onclick')||'').includes(k)):null;
+ const undoB=find(play,'undo('),bestB=find(hintSec,'doHint'),coachB=find(hintSec,'coachHint');
+ const qa=document.createElement('div');qa.className='sec rw';qa.dataset.s='qa';
+ const mkb=(id,cls)=>{const b=document.createElement('button');b.type='button';b.id=id;b.className=cls||'';return b};
+ const bU=mkb('qu'),bB=mkb('qb','qh'),bC=mkb('qc','qh'),bA=mkb('anb'),bO=mkb('qo');
+ bU.onclick=()=>undoB&&undoB.click();bB.onclick=()=>bestB&&bestB.click();bC.onclick=()=>coachB&&coachB.click();
  const msg=()=>L('Analysis is off — play freely. You can analyse the game later in Review.','التحليل متوقف — العب براحتك. تقدر تحلل الجيم بعدين من تبويب المراجعة.');
- const paint=()=>{document.body.classList.toggle('noan',!LIVEAN);btn.textContent=(LIVEAN?'🧠 ':'🚫 ')+L('Live analysis: ','التحليل المباشر: ')+(LIVEAN?L('ON','يعمل'):L('OFF','متوقف'));btn.classList.toggle('p',!!LIVEAN)};
+ const paint=()=>{document.body.classList.toggle('noan',!LIVEAN);
+  bU.textContent='↩ '+L('Undo','تراجع');bB.textContent='💡 '+L('Best','الأفضل');bC.textContent='🎓 '+L('Coach','المدرب');
+  bA.textContent=(LIVEAN?'🧠 ':'🚫 ')+(LIVEAN?L('On','يعمل'):L('Off','متوقف'));bA.title=L('Live analysis','التحليل المباشر');bA.classList.toggle('p',!!LIVEAN);
+  bO.textContent='⋯';bO.title=L('More actions','المزيد')};
  const set=v=>{LIVEAN=v?1:0;try{localStorage.setItem(KEY,v?'1':'0')}catch(e){}paint();if(!LIVEAN)hn.textContent=msg();else if(!ML.length)hn.textContent=L('Live analysis is on — I will rate your moves.','التحليل المباشر يعمل — هقيّم نقلاتك.')};
- btn.onclick=()=>set(!LIVEAN);
- const ps=document.querySelector('.sec[data-s=play]');if(ps)ps.insertBefore(btn,ps.firstChild);
+ bA.onclick=()=>set(!LIVEAN);
+ bO.onclick=()=>document.body.classList.toggle('opts');
+ [bU,bB,bC,bA,bO].forEach(b=>qa.appendChild(b));
+ if(play){play.parentNode.insertBefore(qa,play);play.addEventListener('click',e=>{if(e.target.closest('button'))setTimeout(()=>document.body.classList.remove('opts'),60)})}
  {const _n=newG;newG=function(){const r=_n.apply(this,arguments);if(!LIVEAN)hn.textContent=msg();return r}}
- {const _t=UI.tab;UI.tab=function(n){const r=_t.apply(this,arguments);try{paint()}catch(e){}return r}}
+ {const _t=UI.tab;UI.tab=function(n){const r=_t.apply(this,arguments);try{paint();document.body.classList.remove('opts')}catch(e){}return r}}
  paint();if(!LIVEAN&&!ML.length)hn.textContent=msg()}
 })();
 </script>
@@ -5615,7 +5658,7 @@ window.ANX=(()=>{
 {const cds=document.querySelectorAll('.sec[data-s=more] .cd');const c=cds[1];
  if(c){const ar=()=>{try{return localStorage.getItem('chessLang')==='ar'}catch(e){return false}};
   const sel=document.createElement('select');sel.id='aw';sel.style.cssText='width:100%;margin:5px 0';
-  const lab=()=>{[...sel.options].forEach(o=>{o.textContent=(o.value==='auto'?(ar()?'تلقائي':'Auto'):o.value)+(ar()?' — محركات التحليل':' analysis engines')});};
+  const lab=()=>{[...sel.options].forEach(o=>{o.textContent=(ar()?'محركات التحليل: ':'Analysis engines: ')+(o.value==='auto'?(ar()?'تلقائي':'Auto'):o.value)});};
   ['auto','1','2','3','4'].forEach(v=>{const o=document.createElement('option');o.value=v;sel.appendChild(o)});
   try{sel.value=localStorage.getItem('chessWorkers')||'auto'}catch(e){}lab();
   sel.onchange=()=>{try{localStorage.setItem('chessWorkers',sel.value)}catch(e){}};c.appendChild(sel)}}
