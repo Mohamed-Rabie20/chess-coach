@@ -24,7 +24,7 @@ js/                   loaded in file-name order (classic scripts sharing one glo
   21-coach-ui         coach bubble, live-analysis switch, Train-on-main-board glue
   22-analysis-speed   parallel Stockfish workers for game analysis
   23-backup           More > Backup: copy / restore all app data
-SIGNING.md            how to keep one signing key (APK updates install over the old app)
+SIGNING.md            fixed signing key + release APK (updates install over the old app)
 engine/config.js      written by the GitHub workflow (which Stockfish build is bundled)
 tools/bundle.py       inlines everything into dist/index.html (one file)
 tests/                Playwright tests + a mock UCI engine (see below)
