@@ -1,48 +1,54 @@
-# Chess Coach
+# ♟️ Chess Coach — مدرب الشطرنج
 
-Chess trainer / analyser (HTML + CSS + JavaScript, Stockfish WASM, packaged as an Android APK with Capacitor).
+تطبيق أندرويد مجاني بيلعب معاك شطرنج وبيعلّمك وإنت بتلعب: بيقيّم نقلاتك زي chess.com، بيشرحلك ليه النقلة غلط، وبيدرّبك على أخطائك. بيشتغل **من غير إنترنت** وكل بياناتك بتفضل على موبايلك.
 
-## Layout
+[⬇️ حمّل آخر نسخة](../../releases/latest) · [English below](#english)
 
-```
-index.html            page shell: markup + <link>/<script> tags (nothing else)
-css/                  00-base · 01-look · 02-tabs · 03-report · 04-coach        (loaded in this order)
-js/                   loaded in file-name order (classic scripts sharing one global scope)
-  00-state            constants, board state, settings
-  01-rules-engine     move generator, rules, built-in search
-  02-coaching         short explanations for moves
-  03-ui-board         board drawing and clicks
-  04-stockfish        Stockfish worker bridge (+ early stop on a stable best move)
-  05-move-ratings     rating names / colours
-  06-game-flow        play, bots, review (rating each move), PGN/FEN, draw rules
-  07-local-rating     Elo against the bots + games archive
-  08..14              install prompt, service worker, animations, sounds
-  15-data-openings    opening book (data)        16-data-puzzles   puzzles (data)
-  17-train            Mistakes / Openings / Puzzles drills (use the main board)
-  18-explain-language Arabic / English texts      19-why   "Why?" explanations + game report
-  20-tabs             bottom tab bar (Play / Review / Train / More)
-  21-coach-ui         coach bubble, live-analysis switch, Train-on-main-board glue
-  22-analysis-speed   parallel Stockfish workers for game analysis
-  23-backup           More > Backup: copy / restore all app data
-SIGNING.md            fixed signing key + release APK (updates install over the old app)
-engine/config.js      written by the GitHub workflow (which Stockfish build is bundled)
-tools/bundle.py       inlines everything into dist/index.html (one file)
-tests/                Playwright tests + a mock UCI engine (see below)
-.github/workflows/build-apk.yml   builds the APK (copies index.html, css/, js/)
-```
+## بيعمل إيه؟
 
-Add new code as a new file in `js/` (or edit the matching one) and, if it is a new file, add its `<script>` tag to `index.html`.
-**Flat layout (no folders)**: all css/js files can also sit next to `index.html` (the `<script src>` / `<link href>` paths then have no `js/` / `css/` prefix). The workflow copies them from the repo root.
-The old single-file layout still builds: if only `index.html` is in the repo (a bundled one) the workflow copies just that.
+### 🎮 العب
+- العب **ضد الكمبيوتر** (سهل، متوسط، صعب، خبير) أو **لاعبين على نفس الموبايل**.
+- اختار لونك، والساعة (من غير ساعة، أو 1 و3 و5 و10 و15 دقيقة).
+- تراجع عن نقلة، اقلب اللوح، استسلم، واطلب تعادل. والتعادل بتكرار المركز 3 مرات بيحصل تلقائي زي chess.com.
+- تقييم Elo ليك ضد الكمبيوتر بيتحدّث بعد كل جيم.
 
-## Tests (need `pip install playwright && playwright install chromium`)
+### 🧠 تقييم نقلاتك لحظة بلحظة
+- كل نقلة بتتقيّم: **Brilliant، Great، Best، Excellent، Good، Book، Inaccuracy، Mistake، Miss، Blunder**.
+- شريط تقييم وأسهم بتوريك النقلة الأحسن.
+- زرار **"ليه؟"** بيشرحلك السبب بالعربي أو الإنجليزي.
+- زرار **🧠 On/Off** تحت اللوح: لو وقفته، تلعب من غير ما أي حاجة تقولك النقلة صح ولا غلط (وهتحلل الجيم بعدين).
+- **Best** و**Coach** بيدّولك تلميح لو محتاج.
 
-```
-python3 tests/suite.py   $PWD/index.html     # rules (perft), draws, tabs, Train, mistakes, report
-python3 tests/toggle.py  $PWD/index.html     # live analysis on/off
-python3 tests/trynav.py  $PWD/index.html     # tried moves: ◀ ▶ walk through them, arrows, coach bubble height
-python3 tests/backup.py  $PWD/index.html     # backup / restore
-python3 tests/playbar.py $PWD/index.html     # Play action row (Undo · Best · Coach · analysis · ⋯), options, tab layouts
-python3 tests/speed.py 300                   # analysis speed with a simulated engine (300 ms per search)
-python3 tools/bundle.py && python3 tests/suite.py $PWD/dist/index.html
-```
+### 🔍 مراجعة الجيمات
+- حلّل أي جيم لعبته أو استوردته (PGN) واحصل على **تقرير**: الدقة لكل لاعب، المستوى التقريبي، أهم اللحظات، وملخص من المدرب.
+- تنقّل بين النقلات بالأسهم، **وجرّب نقلات مختلفة في نص الجيم** وشوف تقييمها. والأسهم ◀ ▶ بتمشي في نقلاتك التجريبية.
+
+### 🎓 تدريب
+- **أخطائك:** غلطاتك بتتحفظ تلقائياً من جيماتك، وتحلها على اللوح. اللي بتحلّه صح بيتشال.
+- **الافتتاحيات:** تعلّم افتتاحية خطوة بخطوة (Learn) أو جرّبها وإنت بتلعب (Practise).
+- **ألغاز** بتقييم ومواضيع.
+- **إحصائياتك**، و**استيراد جيماتك من chess.com** باسم المستخدم (ده بس اللي بيحتاج إنترنت).
+
+### 🛠 حاجات تانية
+- عربي وإنجليزي، ووضع داكن، و4 ألوان للوح، وأصوات.
+- استيراد وتصدير **PGN/FEN**.
+- **نسخة احتياطية** لجيماتك وتقييمك وأخطائك (More ثم Backup).
+
+## التثبيت (أندرويد)
+1. افتح صفحة [آخر نسخة](../../releases/latest) من موبايلك، ونزّل ملف **`Chess-Coach-release.apk`**.
+2. افتح الملف. لو طلب السماح بالتثبيت من المتصفح، وافق.
+3. لو ظهرت رسالة من Play Protect إن التطبيق غير معروف، اضغط **More details** ثم **Install anyway** (ده طبيعي لأي تطبيق مش من Google Play).
+
+**التحديث:** نزّل النسخة الجديدة من نفس الصفحة وركّبها فوق القديمة، وبياناتك بتفضل. (لو ظهر "App not installed"، يبقى النسخة القديمة جاية من توقيع مختلف: خد نسخة احتياطية من More ثم Backup، وامسح التطبيق، وركّب الجديد، وبعدها Restore.)
+
+## الخصوصية
+- مفيش حسابات ولا إعلانات. الجيمات والتقييم بيتحفظوا على موبايلك بس.
+- الإنترنت مطلوب بس لاستيراد جيمات من chess.com.
+
+## English
+**Chess Coach** is a free Android chess trainer. Play the computer or a friend on the same phone, get chess.com-style move ratings (Brilliant … Blunder) with a "Why?" explanation, review any game with an accuracy report, try your own moves in the middle of a game, and train on your own mistakes, openings and puzzles. It works offline and keeps all data on your phone. A Live analysis switch lets you play without any feedback and analyse later.
+
+Install: download `Chess-Coach-release.apk` from the [latest release](../../releases/latest) and open it (allow "install unknown apps" if asked; on Play Protect's warning choose *More details → Install anyway*).
+
+## الشكر والمصادر
+محرك Stockfish، وقاعدة افتتاحيات Lichess، وإطار Capacitor. التفاصيل والتراخيص في [NOTICE.md](NOTICE.md). ولو بتطوّر الكود، شوف [DEVELOPERS.md](DEVELOPERS.md).
