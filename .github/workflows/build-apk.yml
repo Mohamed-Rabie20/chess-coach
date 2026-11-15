@@ -21,6 +21,8 @@ on:
       - sounds/**
       - "*.mp3"
       - .github/workflows/**
+permissions:
+  contents: write
 concurrency:
   group: build-apk-${{ github.ref }}
   cancel-in-progress: true
@@ -121,6 +123,11 @@ jobs:
           done
           printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#0c1322</color>\n</resources>\n' > $RES/values/ic_launcher_background.xml
           find $RES -name 'ic_launcher*' | sort
+      - name: Version number (grows with every build, so each APK counts as an update)
+        run: |
+          F=android/app/build.gradle
+          sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"1.${{ github.run_number }}\"/" "$F"
+          grep -nE "versionCode|versionName" "$F" || true
       - name: Fixed signing key (new APKs install over the old one and keep your games)
         env:
           KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
@@ -137,6 +144,38 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+      - name: Release APK (final version, not debuggable) signed with the same fixed key
+        id: release
+        continue-on-error: true
+        run: |
+          set -e
+          KS="$HOME/.android/debug.keystore"
+          if [ -z "${{ secrets.DEBUG_KEYSTORE_B64 }}" ]; then echo "Add the DEBUG_KEYSTORE_B64 secret first (see SIGNING.md): skipping the release APK"; exit 1; fi
+          cd android
+          ./gradlew assembleRelease
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/zipalign" -f -p 4 "$APK" aligned.apk
+          "$BT/apksigner" sign --ks "$KS" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out "$GITHUB_WORKSPACE/Chess-Coach-release.apk" aligned.apk
+          "$BT/apksigner" verify "$GITHUB_WORKSPACE/Chess-Coach-release.apk"
+          ls -la "$GITHUB_WORKSPACE/Chess-Coach-release.apk"
+      - name: Publish the release APK on the repository's Releases page
+        if: steps.release.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER="1.${{ github.run_number }}"
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest Chess-Coach-release.apk --target "${{ github.sha }}" --title "Chess Coach $VER" --notes "Final (release) APK, build ${{ github.run_number }}. Download Chess-Coach-release.apk and install it over the old app." --latest
+          echo "Direct link: https://github.com/${{ github.repository }}/releases/latest/download/Chess-Coach-release.apk"
+      - uses: actions/upload-artifact@v4
+        if: steps.release.outcome == 'success'
+        with:
+          name: Chess-Coach-release-apk
+          path: Chess-Coach-release.apk
+          retention-days: 14
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: Chess-Coach-apk
