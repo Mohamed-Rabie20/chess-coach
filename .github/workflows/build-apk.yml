@@ -29,6 +29,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KS_SET: ${{ secrets.DEBUG_KEYSTORE_B64 != '' }}
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -137,6 +139,7 @@ jobs:
             echo "$KS" | base64 -d > ~/.android/debug.keystore
             echo "Using the fixed signing key from the DEBUG_KEYSTORE_B64 secret"
           else
+            echo "::warning title=No signing key::The DEBUG_KEYSTORE_B64 secret is missing, so this APK is signed with a temporary key and the release APK is skipped (see SIGNING.md)"
             echo "No DEBUG_KEYSTORE_B64 secret: building with a temporary key (you may have to uninstall the old app before installing this one)"
           fi
       - name: Build APK
@@ -146,11 +149,11 @@ jobs:
           ./gradlew assembleDebug
       - name: Release APK (final version, not debuggable) signed with the same fixed key
         id: release
+        if: env.KS_SET == 'true'
         continue-on-error: true
         run: |
           set -e
           KS="$HOME/.android/debug.keystore"
-          if [ -z "${{ secrets.DEBUG_KEYSTORE_B64 }}" ]; then echo "Add the DEBUG_KEYSTORE_B64 secret first (see SIGNING.md): skipping the release APK"; exit 1; fi
           cd android
           ./gradlew assembleRelease
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
