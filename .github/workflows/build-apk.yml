@@ -147,6 +147,11 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+      - name: Signing certificate of the debug APK (compare it between builds)
+        continue-on-error: true
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | grep -E "SHA-256|Signer #1 certificate DN" || true
       - name: Release APK (final version, not debuggable) signed with the same fixed key
         id: release
         if: env.KS_SET == 'true'
@@ -160,7 +165,8 @@ jobs:
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           "$BT/zipalign" -f -p 4 "$APK" aligned.apk
           "$BT/apksigner" sign --ks "$KS" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out "$GITHUB_WORKSPACE/Chess-Coach-release.apk" aligned.apk
-          "$BT/apksigner" verify "$GITHUB_WORKSPACE/Chess-Coach-release.apk"
+          "$BT/apksigner" verify --print-certs "$GITHUB_WORKSPACE/Chess-Coach-release.apk" | tee certs.txt
+          echo "CERT=$(grep -m1 'SHA-256 digest' certs.txt | sed 's/.*: //')" >> "$GITHUB_ENV"
           ls -la "$GITHUB_WORKSPACE/Chess-Coach-release.apk"
       - name: Publish the release APK on the repository's Releases page
         if: steps.release.outcome == 'success'
@@ -170,7 +176,7 @@ jobs:
         run: |
           VER="1.${{ github.run_number }}"
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest Chess-Coach-release.apk --target "${{ github.sha }}" --title "Chess Coach $VER" --notes "Final (release) APK, build ${{ github.run_number }}. Download Chess-Coach-release.apk and install it over the old app." --latest
+          gh release create latest Chess-Coach-release.apk --target "${{ github.sha }}" --title "Chess Coach $VER" --notes "Final (release) APK, version 1.${{ github.run_number }} (build ${{ github.run_number }}). Download Chess-Coach-release.apk and install it over the old app. Signing certificate SHA-256: $CERT" --latest
           echo "Direct link: https://github.com/${{ github.repository }}/releases/latest/download/Chess-Coach-release.apk"
       - uses: actions/upload-artifact@v4
         if: steps.release.outcome == 'success'
