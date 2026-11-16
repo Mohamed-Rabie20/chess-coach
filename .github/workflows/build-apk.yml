@@ -147,6 +147,17 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+      - name: Sign the debug APK with the fixed key too (same signature as the release APK)
+        if: env.KS_SET == 'true'
+        run: |
+          set -e
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          cd android/app/build/outputs/apk/debug
+          "$BT/apksigner" sign --ks "$HOME/.android/debug.keystore" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out app-debug-fixed.apk app-debug.apk
+          mv -f app-debug-fixed.apk app-debug.apk
+          "$BT/apksigner" verify --print-certs app-debug.apk > /tmp/dcerts.txt
+          echo "DCERT=$(grep -m1 'SHA-256 digest' /tmp/dcerts.txt | sed 's/.*: //')" >> "$GITHUB_ENV"
+          grep 'SHA-256 digest' /tmp/dcerts.txt
       - name: Signing certificate of the debug APK (compare it between builds)
         continue-on-error: true
         run: |
@@ -167,6 +178,7 @@ jobs:
           "$BT/apksigner" sign --ks "$KS" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out "$GITHUB_WORKSPACE/Chess-Coach-release.apk" aligned.apk
           "$BT/apksigner" verify --print-certs "$GITHUB_WORKSPACE/Chess-Coach-release.apk" | tee certs.txt
           echo "CERT=$(grep -m1 'SHA-256 digest' certs.txt | sed 's/.*: //')" >> "$GITHUB_ENV"
+          if [ -n "$DCERT" ] && [ "$DCERT" != "$(grep -m1 'SHA-256 digest' certs.txt | sed 's/.*: //')" ]; then echo "::warning title=Different signatures::The debug and release APKs are signed with different certificates"; fi
           ls -la "$GITHUB_WORKSPACE/Chess-Coach-release.apk"
       - name: Publish the release APK on the repository's Releases page
         if: steps.release.outcome == 'success'
